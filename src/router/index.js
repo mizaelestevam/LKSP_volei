@@ -1,12 +1,11 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '@/components/layout/HomeView.vue';
-import TeamView from '@/components/layout/TeamView.vue';
-import BookDetailView from '@/components/layout/BookDetailView.vue';
-import CartPanel from '@/components/cart/CartPanel.vue';
-import ProductList from '@/components/products/ProductList.vue';
-import CartItem from '@/components/cart/CartItem.vue';
-import CartSummary from '@/components/cart/CartSummary.vue';
-
+import { createRouter, createWebHistory } from 'vue-router'
+import HomeView from '@/components/layout/HomeView.vue'
+import TeamView from '@/components/layout/TeamView.vue'
+import BookDetailView from '@/components/layout/BookDetailView.vue'
+import CartPanel from '@/components/cart/CartPanel.vue'
+import ProductList from '@/components/products/ProductList.vue'
+import CartItem from '@/components/cart/CartItem.vue'
+import CartSummary from '@/components/cart/CartSummary.vue'
 
 const routes = [
   {
@@ -25,15 +24,20 @@ const routes = [
     component: BookDetailView,
   },
   {
+    path: '/produto/:id',
+    name: 'product-detail',
+    component: BookDetailView,
+  },
+  {
     path: '/carrinho',
     name: 'Cart',
     component: CartPanel,
-  }
-];
+  },
+]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-});
+})
 
-export default router;
+export default router

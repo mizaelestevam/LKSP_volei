@@ -1,221 +1,215 @@
 <script setup>
-import { ref } from "vue";
+import { ref } from 'vue'
 
-const membroSelecionado = ref(null);
+const membroSelecionado = ref(null)
 
 const membros = [
   {
-    nome: "Bianca Holanda De Jesus",
-    turma: "2info2",
-    github: "Bianca161",
+    nome: 'Kemilly',
+    imagem: '/booksImgs/WhatsApp Image 2026-10-01 at 18.43.57.jpeg',
   },
   {
-    nome: "Mizael Estevam ",
-    turma: "2info2",
-    github: "mizaelestevam",
+    nome: 'Sara',
+    imagem: '/booksImgs/WhatsApp Image 2026-10-01 at 18.13.13.jpeg',
   },
   {
-    nome: "Sara Schulz",
-    turma: "2info2",
-    github: "saraSchulz",
+    nome: 'Lavinia',
+    imagem: '/booksImgs/WhatsApp Image 2026-10-01 at 18.10.27.jpeg',
   },
-];
+]
 
 function selecionarMembro(membro) {
-  membroSelecionado.value = membro;
+  membroSelecionado.value = membro
 }
 
 function voltar() {
-  membroSelecionado.value = null;
+  membroSelecionado.value = null
 }
 </script>
+
 <template>
   <section class="nossoEquipe">
     <div class="titulo">
-      <h2>Nossa Equipe</h2>
+      <h2>Sobre nós</h2>
     </div>
+
     <div class="equipe">
       <div class="lista" :class="{ ativo: membroSelecionado }">
-        <h3>Membros:</h3>
         <ul>
-          <li v-for="m in membros" :key="m.nome" @click="selecionarMembro(m)"
-            :class="{ selecionado: membroSelecionado?.nome === m.nome }">
-            {{ m.nome }}
-            <span v-if="membroSelecionado?.nome === m.nome" class="mdi mdi-menu-right"></span>
+          <li
+            v-for="m in membros"
+            :key="m.nome"
+            @click="selecionarMembro(m)"
+            :class="{ selecionado: membroSelecionado?.nome === m.nome }"
+          >
+            <span>{{ m.nome }}</span>
           </li>
         </ul>
       </div>
-      <div class="detalhes" v-if="membroSelecionado">
-        <h3>{{ membroSelecionado.nome }}</h3>
-        <p><b>Turma:</b> {{ membroSelecionado.turma }}</p>
-        <p><i class="mdi mdi-github"></i> {{ membroSelecionado.github }} </p>
-        <button @click="voltar"> <i class="mdi mdi-menu-left"></i>Voltar</button>
+
+      <div v-if="membroSelecionado" class="detalhes">
+        <div class="detalhe-card">
+          <img :src="membroSelecionado.imagem" :alt="membroSelecionado.nome" class="detalhe-foto" />
+          <div class="detalhe-info">
+            <h3>{{ membroSelecionado.nome }}</h3>
+            <button @click="voltar"><i class="mdi mdi-menu-left"></i> Voltar</button>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="space">
-      <RouterLink to="/">
-        <h1>
-          <img src="/logo.png" alt="Logo" class="logo">
-        </h1>
-        para voltar para a vitrine
-      </RouterLink>
     </div>
   </section>
 </template>
+
 <style scoped>
 .nossoEquipe {
   width: 100%;
+  min-height: 70vh;
+  padding: 4rem 2rem 5rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 92, 205, 0.18), transparent 22%),
+    radial-gradient(circle at bottom right, rgba(91, 160, 255, 0.14), transparent 18%),
+    linear-gradient(180deg, #040d1d 0%, #040d1d 100%);
+}
+
+.titulo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.titulo h2 {
+  margin: 0;
+  font-size: clamp(2rem, 3vw, 3rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #f5f7ff;
+  text-shadow: 0 0 25px rgba(255, 116, 219, 0.3);
+}
+
+.equipe {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: stretch;
+  gap: 2rem;
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  background: rgba(10, 18, 31, 0.9);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.24);
+}
+
+.lista {
+  flex: 0 0 260px;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.02);
+}
 
-  & .titulo {
-    margin: 2vw 0;
-    display: flex;
-    justify-content: center;
-    font-size: 30px;
+.lista ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  width: 100%;
+}
 
-    & h2 {
-      color: #6F363A;
-    }
+.lista li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  color: #edf4ff;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.lista li:hover,
+.lista li.selecionado {
+  transform: translateX(3px);
+  border-color: rgba(255, 111, 225, 0.9);
+  box-shadow: 0 0 0 1px rgba(255, 111, 225, 0.3);
+  background: rgba(255, 111, 225, 0.08);
+}
+
+.lista li span {
+  font-size: 1rem;
+  text-align: center;
+  color: #edf4ff;
+}
+
+.detalhes {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.detalhe-card {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(15, 27, 44, 0.9), rgba(8, 16, 29, 0.9));
+  color: #edf4ff;
+}
+
+.detalhe-foto {
+  width: min(100%, 260px);
+  aspect-ratio: 1 / 1.15;
+  object-fit: cover;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.detalhe-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.detalhes h3 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.3rem, 2vw, 1.8rem);
+  color: #f6f8ff;
+}
+
+.detalhes button {
+  border: none;
+  padding: 0.7rem 1.2rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff74df, #8ea4ff);
+  color: #0b1220;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 780px) {
+  .equipe {
+    flex-direction: column;
   }
 
-  & .equipe {
-    width: 100%;
-    box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    gap: 5vw;
-    overflow: hidden;
-
-    & .lista {
-      flex: 1;
-      transform: translateX(0);
-      transition: transform 1s ease;
-      text-align: center;
-      align-items: center;
-      display: flex;
-      flex-direction: column;
-
-
-      & h3 {
-        font-size: 25px;
-        color: #6F363A;
-        text-shadow: 0 4px 7px rgba(0, 0, 0, 0.8);
-      }
-
-      & ul {
-        display: flex;
-        flex-direction: column;
-        text-align: center;
-        align-items: center;
-        list-style: none;
-
-        & li {
-          color: #6F363A;
-          font-size: 20px;
-          margin: 15px;
-          text-align: center;
-          cursor: pointer;
-          padding: 5px 70px;
-          border-radius: 50px;
-          transition: transform 0.3s ease, background-color 0.3s ease;
-
-        }
-
-        & li:hover {
-          transform: scale(1.1);
-          background-color: rgba(184, 144, 78, 0.5);
-        }
-
-        & li.selecionado {
-          transform: scale(1.15);
-          background-color: rgba(184, 144, 78, 0.5);
-
-        }
-
-        & li .mdi {
-          margin-left: 10px;
-
-          color: #6F363A;
-          vertical-align: middle;
-        }
-      }
-    }
-
-    & .lista.ativo {
-      transform: translateX(-10%);
-    }
-
-    & .detalhes {
-      flex: 1;
-      opacity: 1;
-      transition: opacity 0.5s ease;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: #6F363A;
-
-      & button {
-        background-color: transparent;
-        border: none;
-        font-size: 15px;
-        cursor: pointer;
-        margin: 20px;
-        transition: transform 0.3s ease, background-color 0.3s ease;
-        text-align: center;
-        padding: 5px 20px;
-        border-radius: 50px;
-
-      }
-
-      & button:hover {
-        transform: scale(1.1);
-        background-color: rgba(184, 144, 78, 0.5);
-      }
-
-      & h3 {
-        font-size: 30px;
-        color: #000000;
-        margin-bottom: 20px;
-        text-align: center;
-      }
-
-      & p {
-        color: #000;
-        font-size: 20px;
-        text-align: center;
-      }
-    }
-  }
-
-  & .space {
-    margin: 40px 0;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-
-    a {
-      text-decoration: none;
-      color: #6F363A;
-      font-size: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-
-      & h1 {
-        font-size: 1.5rem;
-        color: #6F363A;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-
-        & .logo {
-          width: 150px;
-          height: 100px;
-        }
-      }
-
-    }
+  .lista ul {
+    grid-template-columns: 1fr;
   }
 }
 </style>

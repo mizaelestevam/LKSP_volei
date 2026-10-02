@@ -1,8 +1,7 @@
 const books = [
-
   {
     id: 1,
-    image: '/booksImgs/domCasmurro.png',
+    image: '/booksImgs/dom-casmurro.png',
     title: 'Dom Casmurro',
     autor: 'Machado de Assis',
     preco: 24.9,
@@ -10,7 +9,7 @@ const books = [
   },
   {
     id: 2,
-    image: '/booksImgs/vidasSecas.png',
+    image: '/booksImgs/vidas-secas.png',
     title: 'Vidas Secas',
     autor: 'Graciliano Ramos',
     preco: 19.9,
@@ -26,7 +25,7 @@ const books = [
   },
   {
     id: 4,
-    image: '/booksImgs/tristeQuaresma.png',
+    image: '/booksImgs/triste-fim-de-policarpo-quaresma.png',
     title: 'Triste Fim de Policarpo Quaresma',
     autor: 'Lima Barreto',
     preco: 23.1,
@@ -34,7 +33,7 @@ const books = [
   },
   {
     id: 5,
-    image: '/booksImgs/memoriasCubas.png',
+    image: '/booksImgs/memorias-postumas-de-bras-cubas.png',
     title: 'Memórias Póstumas de Brás Cubas',
     autor: 'Machado de Assis',
     preco: 21.5,
@@ -42,7 +41,7 @@ const books = [
   },
   {
     id: 6,
-    image: '/booksImgs/capitaesAreia.png',
+    image: '/booksImgs/capitaes-da-areia.png',
     title: 'Capitães da Areia',
     autor: 'Jorge Amado',
     preco: 18.75,
@@ -58,7 +57,7 @@ const books = [
   },
   {
     id: 8,
-    image: '/booksImgs/moreninha.png',
+    image: '/booksImgs/a-moreninha.png',
     title: 'A Moreninha',
     autor: 'Joaquim Manuel de Macedo',
     preco: 16.95,
