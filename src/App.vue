@@ -1,8 +1,19 @@
 <script setup>
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AppFooter from './components/layout/AppFooter.vue'
+import {
+  addToCart,
+  cartCount,
+  cartItems,
+  cartTotal,
+  decreaseQuantity,
+  increaseQuantity,
+  removeFromCart,
+} from './data/cart.js'
 
 const searchQuery = ref('')
+const router = useRouter()
 
 const handleSearch = () => {
   console.log('Pesquisando por:', searchQuery.value)
@@ -110,7 +121,7 @@ function closePanel() {
   <header class="app-header">
     <div class="header-container">
       <div class="logo-section">
-        <span class="logo">LKSP</span>
+        <RouterLink to="/" class="logo" aria-label="LKSP, página inicial">LKSP</RouterLink>
       </div>
 
       <nav class="nav-section" aria-label="Menu principal">
@@ -138,9 +149,10 @@ function closePanel() {
         </div>
 
         <div class="icons-group">
-          <button class="icon-button" title="Carrinho">
+          <RouterLink to="/carrinho" class="icon-button" title="Carrinho">
             <i class="mdi mdi-cart-outline"></i>
-          </button>
+            <span v-if="cartCount" class="cart-count">{{ cartCount }}</span>
+          </RouterLink>
           <button class="icon-button" title="Perfil">
             <i class="mdi mdi-account"></i>
           </button>
@@ -193,7 +205,23 @@ function closePanel() {
   </aside>
 
   <main class="page-shell">
-    <RouterView />
+    <RouterView v-slot="{ Component, route }">
+      <component
+        v-if="route.name === 'Cart'"
+        :is="Component"
+        :cart-items="cartItems"
+        :cart-total="cartTotal"
+        @increase-qty="increaseQuantity"
+        @decrease-qty="decreaseQuantity"
+        @go-to-store="router.push('/')"
+      />
+      <component
+        v-else
+        :is="Component"
+        @add-to-cart="addToCart"
+        @remove-from-cart="removeFromCart"
+      />
+    </RouterView>
   </main>
 
   <AppFooter />
@@ -233,6 +261,7 @@ function closePanel() {
   background-clip: text;
   color: transparent;
   line-height: 1;
+  text-decoration: none;
 }
 
 .nav-section {
@@ -313,6 +342,7 @@ function closePanel() {
 }
 
 .icon-button {
+  position: relative;
   width: 38px;
   height: 38px;
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -323,6 +353,22 @@ function closePanel() {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+}
+
+.cart-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ff6adf;
+  color: #101324;
+  font-size: 0.62rem;
+  font-weight: 900;
+  line-height: 17px;
+  text-align: center;
 }
 
 .page-shell {

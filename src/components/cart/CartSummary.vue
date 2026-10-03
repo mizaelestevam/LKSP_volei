@@ -2,8 +2,8 @@
 defineProps({
   totalProdutos: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 })
 </script>
 
@@ -32,67 +32,64 @@ defineProps({
 
 <style scoped>
 .cart-summary {
-  flex: 1;
-  border: none;
-  padding: 30px 24px;
-  background-color: #EDDDC4;
-  border-radius: 20px;
-  box-shadow: 0 0 50px  rgba(0, 0, 0, 0.5);
-  max-width: 380px;
+  width: 100%;
+  padding: 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  background: rgba(10, 18, 32, 0.82);
+  color: #edf5ff;
 }
 
 .summary-title {
-  font-size: 1.2rem;
-  margin-top: 0;
-  margin-bottom: 25px;
-  font-weight: 700;
-  color: #532222;
+  margin: 0 0 1.3rem;
+  color: #f5f8ff;
+  font-size: 1.1rem;
 }
 
 .summary-row {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 14px;
-  font-size: 1rem;
-  color: #532222;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+  color: rgba(227, 238, 255, 0.74);
+  font-size: 0.9rem;
 }
 
 .border-bottom {
-  border-bottom: 1.5px solid #532222;
-  padding-bottom: 16px;
-  margin-bottom: 16px;
-}
-
-.total-row {
-  font-size: 1.15rem;
-  color: #532222;
-  font-weight: bold;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .frete-gratis {
-  color: #0e4139;
-  font-weight: normal;
+  color: #8ce4bd;
+}
+
+.total-row {
+  margin: 1rem 0 0;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.total-row strong {
+  color: #ff84d9;
+  font-size: 1.1rem;
 }
 
 .btn-checkout {
   width: 100%;
-  background-color: #693339;
-  color: #f4edd9;
-  border: none;
-  padding: 14px;
-  font-weight: 600;
-  border-radius: 8px;
+  min-height: 48px;
+  margin-top: 1.4rem;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(90deg, #ff6adf, #8d7cff);
+  color: #0b1120;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
   cursor: pointer;
-  margin-top: 20px;
-  font-size: 1rem;
-  transition: background-color 0.2s, transform 0.1s;
 }
 
 .btn-checkout:hover {
-  background-color: #54282d;
-}
-
-.btn-checkout:active {
-  transform: scale(0.98);
+  filter: brightness(1.08);
 }
 </style>

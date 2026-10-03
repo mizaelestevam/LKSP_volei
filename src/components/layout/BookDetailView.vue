@@ -1,85 +1,18 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { storeProducts } from '../../data/storeProducts.js'
+import { isInCart } from '../../data/cart.js'
 
 const route = useRoute()
 const router = useRouter()
+const emit = defineEmits(['add-to-cart', 'remove-from-cart'])
 
 const currentImageIndex = ref(0)
 const selectedSize = ref('')
 const isPortraitImage = ref(false)
 
-const catalog = [
-  {
-    id: 1,
-    title: 'TÊNIS PERFORMANCE DE VÔLEI',
-    gender: 'feminino',
-    price: 599.9,
-    description:
-      'Tênis de quadra com amortecimento responsivo, solado de alta aderência e estrutura leve para movimentos rápidos.',
-    images: [
-      '/booksImgs/tenis-frontal.jpeg',
-      '/booksImgs/tenis-lateral.jpeg',
-      '/booksImgs/tenis-detalhe.jpeg',
-      '/booksImgs/g.jpeg',
-      '/booksImgs/Captura de tela 2026-10-01 202621.png',
-    ],
-  },
-  {
-    id: 2,
-    title: 'KIT VÔLEI MASCULINO CAMISETA',
-    gender: 'masculino',
-    price: 349.9,
-    description:
-      'Uma peça premium com conforto extremo, corte estratégico e visual agressivo para quem exige mais da performance.',
-    images: [
-      '/booksImgs/tenis-lateral.jpeg',
-      '/booksImgs/tenis-frontal.jpeg',
-      '/booksImgs/tenis-detalhe.jpeg',
-    ],
-  },
-  {
-    id: 3,
-    title: 'KIT VÔLEI FEMININO CAMISETA',
-    gender: 'feminino',
-    price: 399.9,
-    description:
-      'Linha feminina com caimento impecável, leveza, respirabilidade e ótimo acabamento para treino e competição.',
-    images: [
-      '/booksImgs/tenis-detalhe.jpeg',
-      '/booksImgs/tenis-frontal.jpeg',
-      '/booksImgs/tenis-lateral.jpeg',
-    ],
-  },
-  {
-    id: 4,
-    title: 'KIT VÔLEI FEMININO EDIÇÃO ALL BLACK',
-    gender: 'feminino',
-    price: 419.9,
-    description:
-      'Visual moderno e alta performance com tecido respirável e liberação de movimento para cada ponto da partida.',
-    images: [
-      '/booksImgs/tenis-frontal.jpeg',
-      '/booksImgs/tenis-lateral.jpeg',
-      '/booksImgs/tenis-detalhe.jpeg',
-    ],
-  },
-  {
-    id: 5,
-    title: 'TÊNIS LKSP PERFORMANCE DE VÔLEI MASCULINO',
-    gender: 'masculino',
-    price: 599.9,
-    description:
-      'Tênis masculino de quadra com amortecimento responsivo, solado de alta aderência e estrutura leve para movimentos rápidos.',
-    images: [
-      '/booksImgs/tenis-frontal.jpeg',
-      '/booksImgs/tenis-lateral.jpeg',
-      '/booksImgs/tenis-detalhe.jpeg',
-      '/booksImgs/g.jpeg',
-      '/booksImgs/Captura de tela 2026-10-01 202621.png',
-    ],
-  },
-]
+const catalog = storeProducts
 
 const product = computed(() => {
   return catalog.find((item) => item.id === Number(route.params.id)) || catalog[0]
@@ -90,6 +23,7 @@ const recommendation = computed(() => {
 })
 
 const formatPrice = computed(() => `R$ ${product.value.price.toFixed(2).replace('.', ',')}`)
+const productInCart = computed(() => isInCart(product.value.id, selectedSize.value || undefined))
 
 const productImages = computed(() => product.value.images || [])
 
@@ -121,6 +55,15 @@ function updateImageOrientation(event) {
 
 function voltar() {
   router.push('/')
+}
+
+function adicionarAoCarrinho() {
+  if (productInCart.value) {
+    emit('remove-from-cart', product.value.id, selectedSize.value || undefined)
+    return
+  }
+
+  emit('add-to-cart', { ...product.value, tamanho: selectedSize.value })
 }
 </script>
 
@@ -171,7 +114,7 @@ function voltar() {
         </div>
 
         <div class="detail-info">
-          <div class="detail-tag">
+          <div class="detail-tag" :class="{ 'detail-tag--male': product.gender === 'masculino' }">
             {{ product.gender === 'masculino' ? 'MASCULINO' : 'FEMININO' }}
           </div>
           <h1>{{ product.title }}</h1>
@@ -180,11 +123,15 @@ function voltar() {
           <p class="description">{{ product.description }}</p>
 
           <div class="swatches">
-            <span>CORES DISPONÍVEIS</span>
+            <span>ÚNICA COR: {{ product.colorName }}</span>
             <div class="swatch-row">
-              <i class="swatch pink"></i>
-              <i class="swatch cyan"></i>
-              <i class="swatch violet"></i>
+              <i
+                class="swatch"
+                :style="{ backgroundColor: product.color }"
+                role="img"
+                :aria-label="`Cor disponível: ${product.colorName}`"
+                :title="product.colorName"
+              ></i>
             </div>
           </div>
 
@@ -201,12 +148,21 @@ function voltar() {
             </button>
           </div>
 
-          <button class="buy-button">ADICIONAR AO CARRINHO</button>
+          <button
+            class="buy-button"
+            :class="{ 'is-added': productInCart }"
+            :aria-pressed="productInCart"
+            @click="adicionarAoCarrinho"
+          >
+            {{ productInCart ? 'RETIRAR DO CARRINHO' : 'ADICIONAR AO CARRINHO' }}
+          </button>
         </div>
 
         <aside class="recommendation-box">
           <p>RECOMENDAÇÃO</p>
-          <div class="mini-figure" :class="recommendation.imageClass"></div>
+          <div class="mini-figure">
+            <img :src="recommendation.image" :alt="recommendation.title" />
+          </div>
           <h3>{{ recommendation.title }}</h3>
           <button @click="router.push(`/produto/${recommendation.id}`)">VER MODELO</button>
         </aside>
@@ -448,6 +404,12 @@ function voltar() {
   background: rgba(255, 255, 255, 0.02);
 }
 
+.detail-tag--male {
+  border-color: rgba(113, 220, 255, 0.35);
+  color: #71dcff;
+  background: rgba(75, 185, 255, 0.08);
+}
+
 .detail-info h1 {
   margin: 1rem 0 0.6rem;
   font-size: clamp(2rem, 3vw, 3.2rem);
@@ -493,16 +455,6 @@ function voltar() {
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
-.swatch.pink {
-  background: #ff72de;
-}
-.swatch.cyan {
-  background: #71e5ff;
-}
-.swatch.violet {
-  background: #8b7aff;
-}
-
 .sizes {
   display: flex;
   gap: 0.6rem;
@@ -542,6 +494,10 @@ function voltar() {
   cursor: pointer;
 }
 
+.buy-button.is-added {
+  background: linear-gradient(90deg, #71dcff, #8ce4bd);
+}
+
 .recommendation-box button {
   width: 100%;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -574,6 +530,16 @@ function voltar() {
   height: 180px;
   border-radius: 18px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.mini-figure img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: screen;
 }
 
 .recommendation-box h3 {

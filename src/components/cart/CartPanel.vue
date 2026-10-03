@@ -2,28 +2,26 @@
 import CartItem from './CartItem.vue'
 import CartSummary from './CartSummary.vue'
 
- defineProps({
+defineProps({
   cartItems: {
     type: Array,
-    required: true
+    required: true,
   },
   cartTotal: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 })
 
 const emit = defineEmits(['increase-qty', 'decrease-qty', 'go-to-store'])
 </script>
 
 <template>
-
   <div class="cart-page">
     <div class="cart-wrapper">
       <h1 class="cart-title">Carrinho</h1>
 
-      <div class="cart-container">
-
+      <div v-if="cartItems.length" class="cart-container">
         <div class="cart-main">
           <div class="cart-header">
             <span class="header-titulo">Título</span>
@@ -34,7 +32,7 @@ const emit = defineEmits(['increase-qty', 'decrease-qty', 'go-to-store'])
           <div class="cart-items">
             <CartItem
               v-for="item in cartItems"
-              :key="item.id"
+              :key="`${item.id}-${item.tamanho || ''}`"
               :item="item"
               @increase-qty="emit('increase-qty', item)"
               @decrease-qty="emit('decrease-qty', item)"
@@ -42,165 +40,126 @@ const emit = defineEmits(['increase-qty', 'decrease-qty', 'go-to-store'])
           </div>
 
           <div class="footer-layout-container">
-            <div class="cart-footer-actions">
-              <button class="btn-back" @click="emit('go-to-store')">
-                voltar a loja
-              </button>
-
-              <div class="coupon-section">
-                <input type="text" placeholder="codigo de cumpom" class="coupon-input" />
-                <button class="btn-coupon">inserir cupom</button>
-              </div>
-            </div>
-
+            <button class="btn-back" @click="emit('go-to-store')">VOLTAR À LOJA</button>
             <CartSummary :totalProdutos="cartTotal" />
           </div>
-
-
         </div>
+      </div>
+
+      <div v-else class="cart-empty">
+        <i class="mdi mdi-cart-outline" aria-hidden="true"></i>
+        <h2>Seu carrinho está vazio</h2>
+        <p>Explore a coleção e adicione seus produtos favoritos para continuar.</p>
+        <button class="btn-back" @click="emit('go-to-store')">EXPLORAR PRODUTOS</button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.footer-layout-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 80px;
-  margin-top: 60px;
-  width: 100%;
-}
-
-.cart-footer-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 45px;
-  align-items: flex-start;
-  flex: 1;
-}
-
 .cart-page {
-  min-height: 100vh;
-  width: 100%;
-  padding: 60px 20px;
-  box-sizing: border-box;
-  font-family: sans-serif;
+  min-height: calc(100vh - 90px);
+  padding: 3.5rem 2rem 5rem;
+  color: #edf5ff;
 }
 
 .cart-wrapper {
-  max-width: 1200px;
+  max-width: 1250px;
   margin: 0 auto;
 }
 
 .cart-title {
+  margin: 0 0 2rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f5f8ff;
   font-size: 2rem;
-  font-weight: 700;
-  color: #532222;
-  margin-bottom: 40px;
-}
-
-.cart-container {
-  display: flex;
-  flex-direction: column;
-  gap: 50px;
-}
-
-.cart-main {
-  width: 100%;
 }
 
 .cart-header {
-  display: flex;
-  align-items: center;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #716b77;
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #532222;
-}
-
-.header-titulo {
-  flex: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px 140px;
+  padding: 0 0 0.8rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(227, 238, 255, 0.72);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
 .header-quantidade {
-  flex: 1;
   text-align: center;
 }
 
 .header-subtotal {
-  flex: 1;
   text-align: right;
 }
 
 .cart-items {
-  margin-bottom: 30px;
+  margin-bottom: 2rem;
 }
 
-.cart-footer-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 25px;
-  align-items: flex-start;
+.footer-layout-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 370px);
+  align-items: start;
+  gap: 2rem;
 }
 
 .btn-back {
-  background: none;
-  border: 1.5px solid #532222;
-  color: #532222;
-  padding: 10px 24px;
-  font-size: 0.95rem;
-  border-radius: 4px;
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  border: 1px solid rgba(255, 116, 225, 0.65);
+  border-radius: 9px;
+  background: transparent;
+  color: #fff5ff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
   cursor: pointer;
-  text-transform: lowercase;
-  font-weight: 500;
-  transition: background 0.2s;
 }
 
 .btn-back:hover {
-  background-color: rgba(83, 34, 34, 0.08);
+  background: rgba(255, 116, 225, 0.1);
 }
 
-.coupon-section {
+.cart-empty {
   display: flex;
-  gap: 15px;
-  width: 100%;
-  max-width: 400px;
+  flex-direction: column;
+  align-items: center;
+  padding: 4rem 1rem;
+  text-align: center;
 }
 
-.coupon-input {
-  flex: 1;
-  background: none;
-  border: 1.5px solid #532222;
-  padding: 12px 16px;
-  font-size: 0.95rem;
-  color: #532222;
-  border-radius: 4px;
-  outline: none;
+.cart-empty > i {
+  color: #ff82dc;
+  font-size: 3rem;
 }
 
-.coupon-input::placeholder {
-  color: rgba(83, 34, 34, 0.6);
+.cart-empty h2 {
+  margin: 1rem 0 0.4rem;
+  font-size: 1.35rem;
 }
 
-.btn-coupon {
-  background-color: #532222;
-  color: #ede2cf;
-  border: none;
-  padding: 12px 24px;
-  font-size: 0.95rem;
-  border-radius: 4px;
-  cursor: pointer;
-  text-transform: lowercase;
+.cart-empty p {
+  max-width: 420px;
+  margin: 0 0 1.5rem;
+  color: rgba(227, 238, 255, 0.7);
 }
 
-.custom-summary {
-  align-self: flex-end;
-  background-color: transparent;
-  box-shadow: none;
-  padding: 20px 0;
-  width: 100%;
+@media (max-width: 700px) {
+  .cart-page {
+    padding: 2.5rem 1rem 4rem;
+  }
+
+  .cart-header {
+    grid-template-columns: minmax(0, 1fr) 82px 90px;
+    font-size: 0.6rem;
+  }
+
+  .footer-layout-container {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

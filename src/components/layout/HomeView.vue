@@ -1,70 +1,43 @@
 <script setup>
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeProducts } from '../../data/storeProducts.js'
+import { isInCart } from '../../data/cart.js'
 
 const router = useRouter()
+const products = storeProducts
+const emit = defineEmits(['add-to-cart', 'remove-from-cart'])
+const activeFilter = ref('todos')
+const sortOrder = ref('')
 
-const products = [
-  {
-    id: 1,
-    tag: 'LANÇAMENTO',
-    title: 'TÊNIS LKSP PERFORMANCE DE VÔLEI',
-    price: 'R$ 599,90',
-    rating: 42,
-    gender: 'feminino',
-    image: '/booksImgs/tenis-frontal.jpeg',
-    description:
-      'Tênis de quadra com amortecimento responsivo, solado de alta aderência e estrutura leve para movimentos rápidos.',
-    colors: ['rosa', 'ciano', 'roxo'],
-  },
-  {
-    id: 2,
-    tag: 'NOVO',
-    title: 'KIT VÔLEI MASCULINO CAMISETA',
-    price: 'R$ 349,90',
-    rating: 38,
-    gender: 'masculino',
-    image: '/booksImgs/tenis-lateral.jpeg',
-    description:
-      'Mais conforto, mais mobilidade e muito estilo com layout moderno e leve para treino e competição.',
-    colors: ['roxo', 'azul', 'cinza'],
-  },
-  {
-    id: 3,
-    tag: 'EDIÇÃO BRANCA',
-    title: 'KIT VÔLEI FEMININO CAMISETA',
-    price: 'R$ 399,90',
-    rating: 27,
-    gender: 'feminino',
-    image: '/booksImgs/tenis-detalhe.jpeg',
-    description:
-      'Linha feminina com visual sofisticado, leveza e caimento impecável para performance continua.',
-    colors: ['rosa', 'branco', 'prata'],
-  },
-  {
-    id: 4,
-    tag: 'ALL BLACK',
-    title: 'KIT VÔLEI FEMININO EDIÇÃO ALL BLACK',
-    price: 'R$ 419,90',
-    rating: 19,
-    gender: 'feminino',
-    image: '/booksImgs/tenis-frontal.jpeg',
-    description:
-      'Visual marcante e alta performance, feita para quem quer destaque com conforto e liberdade de movimento.',
-    colors: ['preto', 'ciano', 'rosa'],
-  },
-  {
-    id: 5,
-    tag: 'MASCULINO',
-    title: 'TÊNIS LKSP PERFORMANCE DE VÔLEI MASCULINO',
-    price: 'R$ 599,90',
-    rating: 36,
-    gender: 'masculino',
-    image: '/booksImgs/tenis-frontal.jpeg',
-    description:
-      'Tênis masculino de quadra com amortecimento responsivo, solado de alta aderência e estrutura leve para movimentos rápidos.',
-    colors: ['roxo', 'ciano', 'preto'],
-  },
-]
+const visibleProducts = computed(() => {
+  const filteredProducts = products.filter(
+    (product) => activeFilter.value === 'todos' || product.gender === activeFilter.value,
+  )
+
+  if (sortOrder.value === 'price-asc') {
+    return filteredProducts.sort((first, second) => first.price - second.price)
+  }
+  if (sortOrder.value === 'price-desc') {
+    return filteredProducts.sort((first, second) => second.price - first.price)
+  }
+  if (sortOrder.value === 'title-asc') {
+    return filteredProducts.sort((first, second) =>
+      first.title.localeCompare(second.title, 'pt-BR', { sensitivity: 'base' }),
+    )
+  }
+
+  return filteredProducts
+})
+
+function toggleCartItem(product) {
+  if (isInCart(product.id)) {
+    emit('remove-from-cart', product.id)
+    return
+  }
+
+  emit('add-to-cart', product)
+}
 
 function abrirProduto(producto) {
   router.push(`/produto/${producto.id}`)
@@ -126,21 +99,49 @@ function abrirProduto(producto) {
     <div class="catalog-header">
       <div class="breadcrumbs">INÍCIO <span>›</span> UNIFORMES <span>›</span> VÔLEI DE QUADRA</div>
       <div class="filters">
-        <button class="filter active">TODOS</button>
-        <button class="filter">MASCULINO</button>
-        <button class="filter">FEMININO</button>
+        <button
+          class="filter"
+          :class="{ active: activeFilter === 'todos' }"
+          :aria-pressed="activeFilter === 'todos'"
+          @click="activeFilter = 'todos'"
+        >
+          TODOS
+        </button>
+        <button
+          class="filter"
+          :class="{ active: activeFilter === 'masculino' }"
+          :aria-pressed="activeFilter === 'masculino'"
+          @click="activeFilter = 'masculino'"
+        >
+          MASCULINO
+        </button>
+        <button
+          class="filter"
+          :class="{ active: activeFilter === 'feminino' }"
+          :aria-pressed="activeFilter === 'feminino'"
+          @click="activeFilter = 'feminino'"
+        >
+          FEMININO
+        </button>
       </div>
-      <button class="sort-button">ORDENAR POR <span>▾</span></button>
+      <select v-model="sortOrder" class="sort-button" aria-label="Ordenar produtos">
+        <option value="">ORDENAR POR</option>
+        <option value="price-desc">PREÇO: MAIOR PARA MENOR</option>
+        <option value="price-asc">PREÇO: MENOR PARA MAIOR</option>
+        <option value="title-asc">ORDEM ALFABÉTICA</option>
+      </select>
     </div>
 
     <div class="product-grid">
       <article
-        v-for="product in products"
+        v-for="product in visibleProducts"
         :key="product.id"
         class="product-card"
         @click="abrirProduto(product)"
       >
-        <div class="product-tag">{{ product.tag }}</div>
+        <div class="product-tag" :class="{ 'product-tag--male': product.gender === 'masculino' }">
+          {{ product.tag }}
+        </div>
         <div class="product-figure">
           <img
             v-if="product.image"
@@ -156,10 +157,18 @@ function abrirProduto(producto) {
         <div class="sizes">
           <span>P</span><span>M</span><span>G</span><span>GG</span><span>XXG</span>
         </div>
-        <div class="price">{{ product.price }}</div>
-        <button type="button">ADICIONAR AO CARRINHO</button>
+        <div class="price">R$ {{ product.price.toFixed(2).replace('.', ',') }}</div>
+        <button
+          type="button"
+          :class="{ 'is-added': isInCart(product.id) }"
+          :aria-pressed="isInCart(product.id)"
+          @click.stop="toggleCartItem(product)"
+        >
+          {{ isInCart(product.id) ? 'RETIRAR DO CARRINHO' : 'ADICIONAR AO CARRINHO' }}
+        </button>
       </article>
     </div>
+    <p v-if="!visibleProducts.length" class="no-products">Nenhum produto encontrado.</p>
   </section>
 </template>
 
@@ -349,6 +358,11 @@ function abrirProduto(producto) {
   text-transform: uppercase;
 }
 
+.sort-button {
+  cursor: pointer;
+  color-scheme: dark;
+}
+
 .filter.active {
   background: linear-gradient(90deg, rgba(255, 122, 230, 0.2), rgba(140, 156, 255, 0.2));
   border-color: rgba(255, 122, 230, 0.6);
@@ -381,6 +395,11 @@ function abrirProduto(producto) {
   font-weight: 800;
   padding: 0.35rem 0.5rem;
   border-radius: 999px;
+}
+
+.product-tag--male {
+  background: linear-gradient(90deg, #54c9f0, #8be6ff);
+  color: #071522;
 }
 
 .product-figure {
@@ -454,7 +473,7 @@ function abrirProduto(producto) {
   margin: 0.3rem 0 1rem;
 }
 
-.product-card button {
+.product-card > button {
   width: 100%;
   border: 1px solid rgba(255, 116, 225, 0.8);
   background: rgba(255, 116, 225, 0.08);
@@ -465,6 +484,12 @@ function abrirProduto(producto) {
   border-radius: 10px;
   font-weight: 800;
   cursor: pointer;
+}
+
+.product-card > button.is-added {
+  border-color: rgba(113, 220, 255, 0.75);
+  background: rgba(75, 185, 255, 0.12);
+  color: #8be6ff;
 }
 
 @media (max-width: 1080px) {
