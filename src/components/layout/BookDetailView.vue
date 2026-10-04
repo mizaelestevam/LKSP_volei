@@ -786,6 +786,10 @@ function adicionarAoCarrinho() {
     grid-template-columns: 1fr;
   }
 
+  .detail-visual {
+    min-height: 0;
+  }
+
   .recommendation-box {
     max-width: 420px;
     width: 100%;
@@ -798,6 +802,60 @@ function adicionarAoCarrinho() {
   .carousel-button {
     width: 40px;
     height: 40px;
+  }
+}
+
+@media (max-width: 640px) {
+  .detail-page {
+    padding: 1.25rem 0.75rem 2.5rem;
+  }
+
+  .detail-shell {
+    padding: 0.85rem;
+    border-radius: 16px;
+  }
+
+  .detail-layout {
+    margin-top: 1rem;
+    gap: 1rem;
+  }
+
+  .detail-visual {
+    padding: 0.65rem;
+    border-radius: 15px;
+  }
+
+  .image-stage {
+    max-height: min(82vw, 420px);
+  }
+
+  .thumbnail-row {
+    gap: 0.5rem;
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  .thumbnail-button {
+    flex: 0 0 58px;
+    width: 58px;
+    height: 58px;
+  }
+
+  .detail-info h1 {
+    font-size: clamp(1.8rem, 9vw, 2.5rem);
+    overflow-wrap: anywhere;
+  }
+
+  .price {
+    font-size: 1.65rem;
+  }
+
+  .description {
+    font-size: 0.92rem;
+  }
+
+  .recommendation-box {
+    max-width: none;
   }
 }
 </style>

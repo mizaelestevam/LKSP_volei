@@ -11,9 +11,19 @@ defineProps({
     type: Number,
     required: true,
   },
+  canCheckout: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-const emit = defineEmits(['increase-qty', 'decrease-qty', 'go-to-store', 'checkout'])
+const emit = defineEmits([
+  'increase-qty',
+  'decrease-qty',
+  'remove-from-cart',
+  'go-to-store',
+  'checkout',
+])
 </script>
 
 <template>
@@ -36,12 +46,13 @@ const emit = defineEmits(['increase-qty', 'decrease-qty', 'go-to-store', 'checko
               :item="item"
               @increase-qty="emit('increase-qty', item)"
               @decrease-qty="emit('decrease-qty', item)"
+              @remove-from-cart="emit('remove-from-cart', $event, item.tamanho)"
             />
           </div>
 
           <div class="footer-layout-container">
             <button class="btn-back" @click="emit('go-to-store')">VOLTAR À LOJA</button>
-            <CartSummary :totalProdutos="cartTotal" @checkout="emit('checkout')" />
+            <CartSummary :totalProdutos="cartTotal" :can-checkout="canCheckout" @checkout="emit('checkout')" />
           </div>
         </div>
       </div>
@@ -150,7 +161,7 @@ const emit = defineEmits(['increase-qty', 'decrease-qty', 'go-to-store', 'checko
 
 @media (max-width: 700px) {
   .cart-page {
-    padding: 2.5rem 1rem 4rem;
+    padding: 1.75rem 1rem 3rem;
   }
 
   .cart-header {
@@ -160,6 +171,35 @@ const emit = defineEmits(['increase-qty', 'decrease-qty', 'go-to-store', 'checko
 
   .footer-layout-container {
     grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .cart-title {
+    margin-bottom: 1.25rem;
+    font-size: 1.65rem;
+  }
+
+  .btn-back {
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 520px) {
+  .cart-header {
+    display: none;
+  }
+
+  .cart-items {
+    margin-bottom: 1rem;
+  }
+
+  .footer-layout-container {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  .footer-layout-container > * {
+    width: 100%;
   }
 }
 </style>

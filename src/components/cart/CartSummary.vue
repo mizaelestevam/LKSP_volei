@@ -1,12 +1,20 @@
 <script setup>
 const emit = defineEmits(['checkout'])
 
-defineProps({
+const props = defineProps({
   totalProdutos: {
     type: Number,
     required: true,
   },
+  canCheckout: {
+    type: Boolean,
+    default: false,
+  },
 })
+
+function handleCheckout() {
+  emit('checkout')
+}
 </script>
 
 <template>
@@ -28,7 +36,9 @@ defineProps({
       <strong>R$ {{ totalProdutos.toFixed(2).replace('.', ',') }}</strong>
     </div>
 
-    <button class="btn-checkout" @click="emit('checkout')">Pagar</button>
+    <button class="btn-checkout" @click="handleCheckout">
+      {{ canCheckout ? 'Pagar' : 'Cadastre-se para pagar' }}
+    </button>
   </aside>
 </template>
 

@@ -1,4 +1,21 @@
-<script setup></script>
+<script setup>
+import { computed, ref } from 'vue'
+
+const email = ref('')
+const submitted = ref(false)
+
+const isValidEmail = computed(() => /\S+@\S+\.\S+/.test(email.value.trim()))
+
+function handleSubmit() {
+  if (!isValidEmail.value) {
+    submitted.value = false
+    return
+  }
+
+  submitted.value = true
+  email.value = ''
+}
+</script>
 
 <template>
   <footer class="site-footer">
@@ -10,30 +27,43 @@
       </div>
 
       <div class="footer-links institutional-block">
-        <h3>INSTITUCIONAL</h3>
+        <h3>NAVEGAÇÃO</h3>
         <div class="link-grid">
           <ul>
-            <li><RouterLink to="/equipe">Sobre nós</RouterLink></li>
-            <li><RouterLink to="/categoria/tecnologia">Tecnologia</RouterLink></li>
+            <li><RouterLink to="/">Home</RouterLink></li>
+            <li><RouterLink to="/categoria/masculino">Masculino</RouterLink></li>
+            <li><RouterLink to="/categoria/feminino">Feminino</RouterLink></li>
+            <li><RouterLink to="/categoria/tenis">Tênis</RouterLink></li>
           </ul>
           <ul>
-            <li>Sustentabilidade</li>
-            <li>Carreiras</li>
+            <li><RouterLink to="/categoria/uniformes">Uniformes</RouterLink></li>
+            <li><RouterLink to="/categoria/tecnologia">Tecnologia</RouterLink></li>
+            <li><RouterLink to="/equipe">Sobre nós</RouterLink></li>
+            <li><RouterLink to="/carrinho">Carrinho</RouterLink></li>
           </ul>
         </div>
       </div>
 
       <div class="newsletter">
         <h3>RECEBA NOVIDADES</h3>
-        <div class="newsletter-form">
-          <input aria-label="E-mail" type="email" placeholder="Seu e-mail" />
-          <button aria-label="Enviar">→</button>
-        </div>
+        <form class="newsletter-form" @submit.prevent="handleSubmit">
+          <input
+            v-model="email"
+            aria-label="E-mail"
+            type="email"
+            placeholder="Seu e-mail"
+            autocomplete="email"
+          />
+          <button type="submit" aria-label="Enviar">→</button>
+        </form>
+        <p v-if="submitted" class="newsletter-success" aria-live="polite">
+          E-mail cadastrado com sucesso! Logo logo você terá notícias.
+        </p>
       </div>
     </div>
 
     <div class="footer-bottom">
-      <span>© 2024 LKSP Sporttech.</span>
+      <span>© 2026 LKSP Sporttech.</span>
       <span>Termos de uso</span>
       <span>Política de privacidade</span>
     </div>
@@ -142,6 +172,13 @@
   overflow: hidden;
 }
 
+.newsletter-success {
+  margin: 0.75rem 0 0;
+  color: #9be7bb;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 .newsletter-form input {
   flex: 1;
   min-width: 0;
@@ -180,14 +217,21 @@
 
 @media (max-width: 900px) {
   .footer-top {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  }
+
+  .institutional-block {
+    grid-column: auto;
+  }
+
+  .newsletter {
+    grid-column: 1 / -1;
   }
 }
 
 @media (max-width: 560px) {
   .site-footer {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    padding: 2rem 1rem 1.25rem;
   }
 
   .footer-top,
@@ -196,8 +240,19 @@
     display: grid;
   }
 
+  .institutional-block,
+  .newsletter {
+    grid-column: 1;
+  }
+
+  .link-grid {
+    gap: 0.5rem 1rem;
+  }
+
   .footer-bottom {
     justify-content: flex-start;
+    gap: 0.65rem;
+    margin-top: 1.5rem;
   }
 }
 </style>

@@ -17,9 +17,13 @@ import {
 const searchQuery = ref('')
 const isSearchOpen = ref(false)
 const profileOpen = ref(false)
+const isMobileMenuOpen = ref(false)
 const registeredProfile = ref(null)
 const profileEditing = ref(false)
 const profileError = ref('')
+const postalCodeStatus = ref('')
+const postalCodeRequestId = ref(0)
+let postalCodeController
 const deleteConfirmation = ref(false)
 const checkoutConfirmation = ref(null)
 const router = useRouter()
@@ -29,7 +33,17 @@ const currencyFormatter = new Intl.NumberFormat('pt-BR', {
 })
 
 function emptyProfile() {
-  return { name: '', email: '', password: '', confirmPassword: '', image: '' }
+  return {
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    image: '',
+    postalCode: '',
+    state: '',
+    city: '',
+    neighborhood: '',
+  }
 }
 
 const profileForm = ref(emptyProfile())
@@ -40,7 +54,10 @@ const isRegisteredProfileView = computed(
 function openProfile() {
   profileOpen.value = true
   profileError.value = ''
+  postalCodeStatus.value = ''
   deleteConfirmation.value = false
+  postalCodeController?.abort()
+  postalCodeRequestId.value += 1
   profileEditing.value = !registeredProfile.value
   profileForm.value = registeredProfile.value
     ? { ...registeredProfile.value, confirmPassword: registeredProfile.value.password }
@@ -51,6 +68,8 @@ function closeProfile() {
   profileOpen.value = false
   deleteConfirmation.value = false
   profileError.value = ''
+  postalCodeController?.abort()
+  postalCodeRequestId.value += 1
 }
 
 function editProfile() {
@@ -69,6 +88,75 @@ function cancelProfileEdit() {
   }
   profileEditing.value = false
   profileError.value = ''
+}
+
+function cleanProfileText(value) {
+  return value.replace(/[^\p{L}\s'-]/gu, '').replace(/\s{2,}/g, ' ')
+}
+
+function sanitizeProfileText(field, event) {
+  const value = cleanProfileText(event.target.value)
+  profileForm.value[field] = value
+  event.target.value = value
+}
+
+function sanitizeState(event) {
+  const value = event.target.value.replace(/[^a-z]/gi, '').slice(0, 2).toUpperCase()
+  profileForm.value.state = value
+  event.target.value = value
+}
+
+async function handlePostalCodeInput(event) {
+  const digits = event.target.value.replace(/\D/g, '').slice(0, 8)
+  profileForm.value.postalCode =
+    digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits
+  profileError.value = ''
+  postalCodeRequestId.value += 1
+  const requestId = postalCodeRequestId.value
+  postalCodeController?.abort()
+  profileForm.value.state = ''
+  profileForm.value.city = ''
+  profileForm.value.neighborhood = ''
+
+  if (!digits) {
+    postalCodeStatus.value = ''
+    return
+  }
+
+  if (digits.length < 8) {
+    postalCodeStatus.value = ''
+    return
+  }
+
+  postalCodeController = new AbortController()
+  postalCodeStatus.value = 'Consultando CEP...'
+
+  try {
+    const response = await fetch(
+      `https://viacep.com.br/ws/${digits}/json/`,
+      { signal: postalCodeController.signal },
+    )
+    if (!response.ok) {
+      throw new Error(`Consulta de CEP falhou com status ${response.status}.`)
+    }
+
+    const address = await response.json()
+    if (requestId !== postalCodeRequestId.value) return
+
+    if (address.erro) {
+      postalCodeStatus.value = 'CEP não encontrado. Confira o número e tente novamente.'
+      return
+    }
+
+    profileForm.value.state = (address.uf || '').replace(/[^a-z]/gi, '').slice(0, 2).toUpperCase()
+    profileForm.value.city = cleanProfileText(address.localidade || '')
+    profileForm.value.neighborhood = cleanProfileText(address.bairro || '')
+    postalCodeStatus.value = 'Endereço encontrado e preenchido.'
+  } catch (error) {
+    if (error.name === 'AbortError' || requestId !== postalCodeRequestId.value) return
+    postalCodeStatus.value =
+      'Não foi possível consultar o CEP. Verifique sua conexão e tente novamente.'
+  }
 }
 
 function handleProfileImage(event) {
@@ -94,6 +182,34 @@ function handleProfileImage(event) {
 }
 
 function saveProfile() {
+  profileForm.value.name = profileForm.value.name.trim()
+  profileForm.value.state = profileForm.value.state.trim().toUpperCase()
+  profileForm.value.city = profileForm.value.city.trim()
+  profileForm.value.neighborhood = profileForm.value.neighborhood.trim()
+
+  if (!/^\p{L}[\p{L}\s'-]*$/u.test(profileForm.value.name)) {
+    profileError.value = 'O nome deve conter apenas letras.'
+    return
+  }
+
+  if (!/^\d{5}-?\d{3}$/.test(profileForm.value.postalCode)) {
+    profileError.value = 'Digite um CEP válido com 8 números.'
+    return
+  }
+
+  if (!/^[A-Z]{2}$/.test(profileForm.value.state)) {
+    profileError.value = 'O estado deve conter apenas a sigla com 2 letras.'
+    return
+  }
+
+  if (
+    !/^\p{L}[\p{L}\s'-]*$/u.test(profileForm.value.city) ||
+    !/^\p{L}[\p{L}\s'-]*$/u.test(profileForm.value.neighborhood)
+  ) {
+    profileError.value = 'Cidade e bairro devem conter apenas letras.'
+    return
+  }
+
   if (profileForm.value.password.length < 6) {
     profileError.value = 'A senha deve ter pelo menos 6 caracteres.'
     return
@@ -104,7 +220,7 @@ function saveProfile() {
     return
   }
 
-  registeredProfile.value = { ...profileForm.value, name: profileForm.value.name.trim() }
+  registeredProfile.value = { ...profileForm.value }
   profileEditing.value = false
   profileError.value = ''
   deleteConfirmation.value = false
@@ -156,13 +272,13 @@ function handleSearch() {
 }
 
 const navigation = [
-  { label: 'HOME', href: '/' },
-  { label: 'MASCULINO', href: '/categoria/masculino' },
-  { label: 'FEMININO', href: '/categoria/feminino' },
-  { label: 'TÊNIS', href: '/categoria/tenis' },
-  { label: 'UNIFORMES', href: '/categoria/uniformes' },
-  { label: 'TECNOLOGIA', href: '/categoria/tecnologia' },
-  { label: 'SOBRE-NÓS', href: '/equipe' },
+  { label: 'HOME', href: '/', icon: 'mdi-home-outline' },
+  { label: 'MASCULINO', href: '/categoria/masculino', icon: 'mdi-account-outline' },
+  { label: 'FEMININO', href: '/categoria/feminino', icon: 'mdi-account-outline' },
+  { label: 'TÊNIS', href: '/categoria/tenis', icon: 'mdi-shoe-sneaker' },
+  { label: 'UNIFORMES', href: '/categoria/uniformes', icon: 'mdi-tshirt-crew-outline' },
+  { label: 'TECNOLOGIA', href: '/categoria/tecnologia', icon: 'mdi-lightning-bolt-outline' },
+  { label: 'SOBRE-NÓS', href: '/equipe', icon: 'mdi-information-outline' },
 ]
 
 const categoryDetails = {
@@ -257,8 +373,23 @@ function closePanel() {
   activePanel.value = null
 }
 
+function toggleMobileMenu() {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value
+}
+
+function closeMobileMenu() {
+  isMobileMenuOpen.value = false
+}
+
 function completeCheckout() {
   if (!cartItems.value.length) return
+
+  if (!registeredProfile.value) {
+    openProfile()
+    profileEditing.value = true
+    profileError.value = 'Você precisa concluir o cadastro antes de finalizar a compra.'
+    return
+  }
 
   checkoutConfirmation.value = cartTotal.value
   clearCart()
@@ -272,12 +403,46 @@ function completeCheckout() {
         <RouterLink to="/" class="logo" aria-label="LKSP, página inicial">LKSP</RouterLink>
       </div>
 
-      <nav class="nav-section" aria-label="Menu principal">
+      <button
+        class="menu-toggle"
+        type="button"
+        :aria-label="isMobileMenuOpen ? 'Fechar menu' : 'Abrir menu'"
+        :aria-expanded="isMobileMenuOpen"
+        @click="toggleMobileMenu"
+      >
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav
+        class="nav-section"
+        :class="{ 'nav-open': isMobileMenuOpen }"
+        aria-label="Menu principal"
+      >
         <ul class="nav-menu">
           <li v-for="item in navigation" :key="item.label">
-            <a :href="item.href" class="nav-link" @click="openMenuPanel(item, $event)">{{
-              item.label
-            }}</a>
+            <a
+              :href="item.href"
+              class="nav-link"
+              @click="openMenuPanel(item, $event); closeMobileMenu()"
+            >
+              <i class="nav-icon mdi" :class="item.icon" aria-hidden="true"></i>
+              <span>{{ item.label }}</span>
+            </a>
+          </li>
+          <li class="nav-mobile-only">
+            <RouterLink to="/carrinho" class="nav-link" @click="closeMobileMenu">
+              <i class="nav-icon mdi mdi-cart-outline" aria-hidden="true"></i>
+              <span>Carrinho</span>
+              <span v-if="cartCount" class="nav-cart-count">{{ cartCount }}</span>
+            </RouterLink>
+          </li>
+          <li class="nav-mobile-only">
+            <button class="nav-link nav-action" type="button" @click="openProfile(); closeMobileMenu()">
+              <i class="nav-icon mdi mdi-account-circle-outline" aria-hidden="true"></i>
+              <span>Perfil</span>
+            </button>
           </li>
         </ul>
       </nav>
@@ -392,6 +557,7 @@ function completeCheckout() {
             placeholder="Seu nome"
             required
             :readonly="isRegisteredProfileView"
+            @input="sanitizeProfileText('name', $event)"
           />
         </label>
         <label class="profile-field">
@@ -429,6 +595,68 @@ function completeCheckout() {
             :readonly="isRegisteredProfileView"
           />
         </label>
+
+        <section class="profile-address" aria-labelledby="profile-address-title">
+          <h3 id="profile-address-title">Endereço de entrega</h3>
+          <div class="profile-address-grid">
+            <label class="profile-field">
+              <span>CEP</span>
+              <input
+                v-model="profileForm.postalCode"
+                type="text"
+                inputmode="numeric"
+                autocomplete="postal-code"
+                placeholder="00000-000"
+                maxlength="9"
+                pattern="\d{5}-?\d{3}"
+                title="Digite um CEP válido com 8 números."
+                required
+                :readonly="isRegisteredProfileView"
+                @input="handlePostalCodeInput"
+              />
+            </label>
+            <label class="profile-field">
+              <span>Estado</span>
+              <input
+                v-model="profileForm.state"
+                type="text"
+                autocomplete="address-level1"
+                placeholder="UF"
+                maxlength="2"
+                required
+                :readonly="isRegisteredProfileView"
+                @input="sanitizeState"
+              />
+            </label>
+            <label class="profile-field">
+              <span>Cidade</span>
+              <input
+                v-model="profileForm.city"
+                type="text"
+                autocomplete="address-level2"
+                placeholder="Cidade"
+                required
+                :readonly="isRegisteredProfileView"
+                @input="sanitizeProfileText('city', $event)"
+              />
+            </label>
+            <label class="profile-field">
+              <span>Bairro</span>
+              <input
+                v-model="profileForm.neighborhood"
+                type="text"
+                autocomplete="address-level3"
+                placeholder="Bairro"
+                required
+                :readonly="isRegisteredProfileView"
+                @input="sanitizeProfileText('neighborhood', $event)"
+              />
+            </label>
+          </div>
+          <p v-if="postalCodeStatus" class="postal-code-status" role="status" aria-live="polite">
+            {{ postalCodeStatus }}
+          </p>
+        </section>
 
         <p v-if="profileError" class="profile-error" role="alert">{{ profileError }}</p>
 
@@ -518,8 +746,10 @@ function completeCheckout() {
         :is="Component"
         :cart-items="cartItems"
         :cart-total="cartTotal"
+        :can-checkout="Boolean(registeredProfile)"
         @increase-qty="increaseQuantity"
         @decrease-qty="decreaseQuantity"
+        @remove-from-cart="removeFromCart"
         @go-to-store="router.push('/')"
         @checkout="completeCheckout"
       />
@@ -565,6 +795,7 @@ function completeCheckout() {
 }
 
 .header-container {
+  position: relative;
   max-width: 1450px;
   margin: 0 auto;
   padding: 0.9rem 1.8rem;
@@ -576,6 +807,28 @@ function completeCheckout() {
 
 .logo-section {
   min-width: 120px;
+}
+
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.28rem;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+}
+
+.menu-toggle span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: #edf5ff;
 }
 
 .logo {
@@ -613,6 +866,11 @@ function completeCheckout() {
   font-size: 0.68rem;
   font-weight: 700;
   transition: color 0.2s ease;
+}
+
+.nav-icon,
+.nav-mobile-only {
+  display: none;
 }
 
 .nav-link:hover {
@@ -819,14 +1077,15 @@ function completeCheckout() {
 }
 
 .profile-close {
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.05);
   color: #edf5ff;
-  font-size: 1.4rem;
+  font-size: 1.8rem;
+  line-height: 1;
   cursor: pointer;
 }
 
@@ -848,6 +1107,30 @@ function completeCheckout() {
 .profile-form {
   display: grid;
   gap: 0.8rem;
+}
+
+.profile-address {
+  display: grid;
+  gap: 0.7rem;
+  padding-top: 0.35rem;
+}
+
+.profile-address h3 {
+  margin: 0;
+  color: #f5f7ff;
+  font-size: 0.9rem;
+}
+
+.profile-address-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.postal-code-status {
+  margin: -0.2rem 0 0;
+  color: rgba(237, 245, 255, 0.72);
+  font-size: 0.75rem;
 }
 
 .profile-avatar-block {
@@ -1275,22 +1558,127 @@ function completeCheckout() {
 @media (max-width: 1100px) {
   .header-container {
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: space-between;
+    gap: 0.8rem 1.2rem;
+  }
+
+  .logo-section {
+    order: 0;
+    margin-right: auto;
+  }
+
+  .menu-toggle {
+    order: 1;
   }
 
   .nav-section {
+    display: none;
     order: 3;
     width: 100%;
   }
 
+  .nav-section.nav-open {
+    display: block;
+  }
+
+  .menu-toggle {
+    display: flex;
+  }
+
   .header-tools {
+    order: 2;
     width: 100%;
     min-width: 0;
     justify-content: space-between;
   }
+
+  .nav-menu {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    gap: 0.55rem;
+    padding: 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    background: rgba(6, 14, 24, 0.98);
+    box-shadow: 0 18px 32px rgba(0, 0, 0, 0.22);
+  }
+
+  .nav-menu li {
+    min-width: 0;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.55rem;
+    width: 100%;
+    min-height: 42px;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.035);
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 0.68rem;
+    letter-spacing: 0.035em;
+    text-align: left;
+  }
+
+  .nav-link:hover,
+  .nav-link:focus-visible {
+    border-color: rgba(122, 229, 255, 0.35);
+    background: rgba(122, 229, 255, 0.08);
+    color: #fff;
+    outline: none;
+  }
+
+  .nav-icon {
+    flex: 0 0 auto;
+    font-size: 1.1rem;
+    color: #7ae5ff;
+  }
+
+  .nav-mobile-only {
+    display: list-item;
+  }
+
+  .nav-action {
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .nav-cart-count {
+    margin-left: auto;
+    color: #ff9be6;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .icons-group {
+    display: none;
+  }
 }
 
 @media (max-width: 720px) {
+  .header-container {
+    padding: 0.8rem 1rem;
+  }
+
+  .logo {
+    font-size: 2rem;
+  }
+
+  .header-tools {
+    width: 100%;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .search-container {
+    min-width: 0;
+    flex: 1;
+  }
+
   .menu-panel {
     right: 0.75rem;
     width: calc(100vw - 1.5rem);
@@ -1303,21 +1691,11 @@ function completeCheckout() {
 
 @media (max-width: 640px) {
   .header-container {
-    padding: 0.8rem 1rem;
+    gap: 0.75rem;
   }
 
-  .nav-menu {
-    flex-wrap: wrap;
-    gap: 0.7rem 1rem;
-  }
-
-  .header-tools {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .icons-group {
-    justify-content: center;
+  .logo {
+    font-size: 1.8rem;
   }
 
   .profile-modal {
@@ -1325,6 +1703,30 @@ function completeCheckout() {
   }
 
   .delete-confirmation > div {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+  .profile-backdrop {
+    padding: 0.6rem;
+  }
+
+  .profile-modal {
+    max-height: calc(100dvh - 1.2rem);
+    padding: 0.9rem;
+    border-radius: 13px;
+  }
+
+  .profile-modal-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .profile-field input {
+    min-height: 42px;
+  }
+
+  .profile-address-grid {
     grid-template-columns: 1fr;
   }
 }

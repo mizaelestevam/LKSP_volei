@@ -6,7 +6,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['decrease-qty', 'increase-qty'])
+const emit = defineEmits(['decrease-qty', 'increase-qty', 'remove-from-cart'])
 </script>
 
 <template>
@@ -18,6 +18,15 @@ const emit = defineEmits(['decrease-qty', 'increase-qty'])
         <p class="item-autor">{{ props.item.autor || props.item.gender }}</p>
         <p class="item-size">Tamanho: {{ props.item.tamanho || 'Não informado' }}</p>
         <p class="item-preco">R$ {{ props.item.preco.toFixed(2).replace('.', ',') }}</p>
+        <button
+          class="remove-item"
+          type="button"
+          :aria-label="`Remover ${item.title} do carrinho`"
+          @click="emit('remove-from-cart', item.id, item.tamanho)"
+        >
+          <i class="mdi mdi-trash-can-outline" aria-hidden="true"></i>
+          <span>Remover produto</span>
+        </button>
       </div>
     </div>
 
@@ -105,6 +114,27 @@ const emit = defineEmits(['decrease-qty', 'increase-qty'])
   font-weight: 800;
 }
 
+.remove-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  align-self: flex-start;
+  margin-top: 0.2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 155, 230, 0.82);
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.remove-item:hover,
+.remove-item:focus-visible {
+  color: #ff9be6;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .quantity-container {
   display: flex;
   justify-content: center;
@@ -181,6 +211,42 @@ const emit = defineEmits(['decrease-qty', 'increase-qty'])
   .quantity-selector {
     gap: 0.25rem;
     padding: 0.2rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .cart-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.7rem;
+    padding: 0.9rem 0;
+  }
+
+  .product-info {
+    grid-column: 1 / -1;
+  }
+
+  .item-capa {
+    width: 72px;
+    height: 88px;
+  }
+
+  .item-titulo {
+    font-size: 0.9rem;
+  }
+
+  .item-autor,
+  .item-size,
+  .item-preco {
+    font-size: 0.76rem;
+  }
+
+  .quantity-container {
+    justify-content: flex-start;
+  }
+
+  .item-subtotal {
+    align-self: center;
+    font-size: 0.82rem;
   }
 }
 </style>

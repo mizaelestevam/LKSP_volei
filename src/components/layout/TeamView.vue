@@ -409,6 +409,10 @@ function voltar() {
 }
 
 @media (max-width: 780px) {
+  .nossoEquipe {
+    padding: 2.5rem 1rem 3rem;
+  }
+
   .corporate-intro {
     margin-bottom: 2rem;
   }
@@ -419,10 +423,54 @@ function voltar() {
 
   .equipe {
     flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
   }
 
   .lista ul {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .lista {
+    padding: 0;
+  }
+
+  .lista li {
+    min-height: 44px;
+    padding: 0.55rem 0.35rem;
+  }
+
+  .lista li span {
+    font-size: 0.85rem;
+  }
+
+  .detalhes {
+    padding: 0;
+  }
+
+  .detalhe-card {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .nossoEquipe {
+    padding-right: 0.8rem;
+    padding-left: 0.8rem;
+  }
+
+  .pillars {
+    gap: 0.5rem;
+  }
+
+  .pillar span {
+    font-size: 0.68rem;
+  }
+
+  .equipe {
+    padding: 0.75rem;
   }
 }
 </style>

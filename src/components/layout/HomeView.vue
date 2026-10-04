@@ -560,21 +560,124 @@ function abrirProduto(producto) {
 
 @media (max-width: 760px) {
   .hero-section {
-    padding-left: 1.2rem;
-    padding-right: 1.2rem;
+    min-height: 0;
+    padding: 1.5rem 1rem 1.25rem;
+  }
+
+  .hero-content {
+    padding: 2rem 0 0.5rem;
+  }
+
+  .hero-content h1 {
+    font-size: clamp(2.25rem, 11vw, 3.5rem);
+    line-height: 1;
+  }
+
+  .hero-content p {
+    margin-top: 1rem;
+    font-size: 0.92rem;
+  }
+
+  .cta-button {
+    margin-top: 1.25rem;
+    padding: 0.85rem 1rem;
+    font-size: 0.78rem;
+  }
+
+  .hero-section {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 
   .catalog-header {
     grid-template-columns: 1fr;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .catalog-section {
+    padding: 1.5rem 1rem 3rem;
   }
 
   .filters {
     justify-content: flex-start;
-    flex-wrap: wrap;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 0.1rem 0 0.4rem;
+    scrollbar-width: thin;
+  }
+
+  .filter {
+    flex: 0 0 auto;
+    padding: 0.7rem 0.85rem;
+    font-size: 0.68rem;
+  }
+
+  .sort-button {
+    width: 100%;
+    min-height: 44px;
   }
 
   .hero-features {
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+  }
+
+  .feature-item {
+    gap: 0.55rem;
+    padding: 0.7rem;
+  }
+
+  .feature-item strong {
+    font-size: 0.72rem;
+  }
+
+  .feature-item small {
+    font-size: 0.58rem;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .product-card {
+    min-width: 0;
+    padding: 0.7rem;
+  }
+
+  .product-figure {
+    height: clamp(135px, 42vw, 210px);
+    margin: 0.5rem 0 0.65rem;
+  }
+
+  .product-card h3 {
+    min-height: 0;
+    font-size: 0.86rem;
+    line-height: 1.35;
+  }
+
+  .product-card > button {
+    min-height: 42px;
+    padding: 0.65rem 0.4rem;
+    font-size: 0.58rem;
+    line-height: 1.3;
+  }
+
+  .sizes {
+    gap: 0.3rem;
+  }
+
+  .sizes button {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .hero-features {
+    grid-template-columns: 1fr;
   }
 
   .product-grid {

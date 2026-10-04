@@ -380,6 +380,57 @@ function toggleCartItem(product) {
     padding: 1.25rem 1rem 3rem;
   }
 
+  .category-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .category-header h1 {
+    font-size: clamp(1.8rem, 9vw, 2.7rem);
+    overflow-wrap: anywhere;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+
+  .product-card {
+    min-width: 0;
+    padding: 0.7rem;
+  }
+
+  .product-figure {
+    height: clamp(135px, 42vw, 210px);
+  }
+
+  .product-card h3 {
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  .price {
+    font-size: 1.15rem;
+  }
+
+  .product-card button {
+    min-height: 42px;
+    padding: 0.65rem 0.4rem;
+    font-size: 0.58rem;
+    line-height: 1.3;
+  }
+
+  .sizes {
+    gap: 0.3rem;
+  }
+
+  .sizes button {
+    min-width: 25px;
+    height: 27px;
+    font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 360px) {
   .product-grid {
     grid-template-columns: 1fr;
   }
