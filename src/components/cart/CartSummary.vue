@@ -1,4 +1,6 @@
 <script setup>
+const emit = defineEmits(['checkout'])
+
 defineProps({
   totalProdutos: {
     type: Number,
@@ -26,7 +28,7 @@ defineProps({
       <strong>R$ {{ totalProdutos.toFixed(2).replace('.', ',') }}</strong>
     </div>
 
-    <button class="btn-checkout">Ir para pagamento</button>
+    <button class="btn-checkout" @click="emit('checkout')">Pagar</button>
   </aside>
 </template>
 

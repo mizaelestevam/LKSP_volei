@@ -13,7 +13,7 @@ defineProps({
   },
 })
 
-const emit = defineEmits(['increase-qty', 'decrease-qty', 'go-to-store'])
+const emit = defineEmits(['increase-qty', 'decrease-qty', 'go-to-store', 'checkout'])
 </script>
 
 <template>
@@ -41,7 +41,7 @@ const emit = defineEmits(['increase-qty', 'decrease-qty', 'go-to-store'])
 
           <div class="footer-layout-container">
             <button class="btn-back" @click="emit('go-to-store')">VOLTAR À LOJA</button>
-            <CartSummary :totalProdutos="cartTotal" />
+            <CartSummary :totalProdutos="cartTotal" @checkout="emit('checkout')" />
           </div>
         </div>
       </div>

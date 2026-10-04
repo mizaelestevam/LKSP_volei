@@ -97,3 +97,8 @@ export function removeFromCart(productId, size) {
   )
   saveCart()
 }
+
+export function clearCart() {
+  cartItems.value = []
+  saveCart()
+}

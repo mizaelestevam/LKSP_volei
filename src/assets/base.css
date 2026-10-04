@@ -7,6 +7,30 @@ body {
   overflow-x: hidden;
 }
 
+:root {
+  scrollbar-color: #8ea4ff #07111f;
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #07111f;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid #07111f;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #7ae5ff, #ff74df);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ff74df, #8ea4ff);
+}
+
 img,
 svg {
   max-width: 100%;

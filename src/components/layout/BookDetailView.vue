@@ -10,6 +10,7 @@ const emit = defineEmits(['add-to-cart', 'remove-from-cart'])
 
 const currentImageIndex = ref(0)
 const selectedSize = ref('')
+const sizeError = ref('')
 const isPortraitImage = ref(false)
 
 const catalog = storeProducts
@@ -18,12 +19,53 @@ const product = computed(() => {
   return catalog.find((item) => item.id === Number(route.params.id)) || catalog[0]
 })
 
+const colorVariants = computed(() => {
+  const colorGroup = product.value.colorGroup
+  if (!colorGroup) return [product.value]
+
+  return catalog.filter((item) => item.colorGroup === colorGroup)
+})
+
 const recommendation = computed(() => {
-  return catalog.find((item) => item.gender !== product.value.gender) || catalog[2]
+  const currentTag = product.value.tag || product.value.title || ''
+  const normalizedTag = currentTag.toUpperCase()
+
+  if (normalizedTag.includes('RELÓGIO')) {
+    const currentColor = (product.value.colorName || '').toLowerCase()
+    const targetColor = currentColor.includes('preto') ? 'branco' : 'preto'
+
+    const oppositeColorWatch = catalog.find(
+      (item) =>
+        item.id !== product.value.id &&
+        (item.tag || item.title || '').toUpperCase().includes('RELÓGIO') &&
+        (item.colorName || '').toLowerCase().includes(targetColor),
+    )
+
+    return oppositeColorWatch || null
+  }
+
+  if (normalizedTag.includes('TÊNIS')) {
+    return null
+  }
+
+  const baseTag = currentTag.replace(/\s+(FEMININA|MASCULINA)$/i, '').trim()
+  const oppositeGender = product.value.gender === 'masculino' ? 'feminino' : 'masculino'
+
+  return (
+    catalog.find(
+      (item) =>
+        item.id !== product.value.id &&
+        (item.tag || item.title || '').replace(/\s+(FEMININA|MASCULINA)$/i, '').trim() ===
+          baseTag &&
+        item.gender === oppositeGender,
+    ) || null
+  )
 })
 
 const formatPrice = computed(() => `R$ ${product.value.price.toFixed(2).replace('.', ',')}`)
-const productInCart = computed(() => isInCart(product.value.id, selectedSize.value || undefined))
+const productInCart = computed(
+  () => Boolean(selectedSize.value) && isInCart(product.value.id, selectedSize.value),
+)
 
 const productImages = computed(() => product.value.images || [])
 
@@ -48,6 +90,21 @@ function selectImage(index) {
   currentImageIndex.value = index
 }
 
+function selectSize(size) {
+  selectedSize.value = size
+  sizeError.value = ''
+}
+
+function selectColorVariant(variant) {
+  if (variant.id === product.value.id) return
+
+  currentImageIndex.value = 0
+  selectedSize.value = ''
+  sizeError.value = ''
+  isPortraitImage.value = false
+  router.push(`/produto/${variant.id}`)
+}
+
 function updateImageOrientation(event) {
   const image = event.target
   isPortraitImage.value = image.naturalHeight > image.naturalWidth
@@ -58,11 +115,17 @@ function voltar() {
 }
 
 function adicionarAoCarrinho() {
+  if (!selectedSize.value) {
+    sizeError.value = 'Selecione um tamanho antes de adicionar ao carrinho.'
+    return
+  }
+
   if (productInCart.value) {
     emit('remove-from-cart', product.value.id, selectedSize.value || undefined)
     return
   }
 
+  sizeError.value = ''
   emit('add-to-cart', { ...product.value, tamanho: selectedSize.value })
 }
 </script>
@@ -76,6 +139,7 @@ function adicionarAoCarrinho() {
         <div class="detail-visual">
           <div class="image-stage">
             <button
+              v-if="productImages.length > 1"
               class="carousel-button left"
               @click="previousImage"
               aria-label="Imagem anterior"
@@ -94,7 +158,12 @@ function adicionarAoCarrinho() {
               />
             </div>
 
-            <button class="carousel-button right" @click="nextImage" aria-label="Próxima imagem">
+            <button
+              v-if="productImages.length > 1"
+              class="carousel-button right"
+              @click="nextImage"
+              aria-label="Próxima imagem"
+            >
               ›
             </button>
           </div>
@@ -114,24 +183,48 @@ function adicionarAoCarrinho() {
         </div>
 
         <div class="detail-info">
-          <div class="detail-tag" :class="{ 'detail-tag--male': product.gender === 'masculino' }">
+          <div v-if="product.gender === 'unissex'" class="detail-tag detail-tag--unisex">
+            UNISSEX
+          </div>
+          <div
+            v-else
+            class="detail-tag"
+            :class="{ 'detail-tag--male': product.gender === 'masculino' }"
+          >
             {{ product.gender === 'masculino' ? 'MASCULINO' : 'FEMININO' }}
           </div>
           <h1>{{ product.title }}</h1>
           <div class="price">{{ formatPrice }}</div>
 
-          <p class="description">{{ product.description }}</p>
+          <p class="description">
+            <template v-if="product.descriptionLead">
+              <strong>{{ product.descriptionLead }}</strong>
+              {{ product.descriptionRight }}
+            </template>
+            <template v-else>{{ product.description }}</template>
+          </p>
 
           <div class="swatches">
-            <span>ÚNICA COR: {{ product.colorName }}</span>
+            <span v-if="colorVariants.length > 1">CORES DISPONÍVEIS</span>
+            <span v-else>COR DO PRODUTO: {{ product.colorName }}</span>
             <div class="swatch-row">
-              <i
-                class="swatch"
-                :style="{ backgroundColor: product.color }"
-                role="img"
-                :aria-label="`Cor disponível: ${product.colorName}`"
-                :title="product.colorName"
-              ></i>
+              <button
+                v-for="variant in colorVariants"
+                :key="variant.id"
+                type="button"
+                class="swatch-option"
+                :class="{ selected: variant.id === product.id }"
+                :aria-label="`Selecionar cor ${variant.colorName}`"
+                :aria-pressed="variant.id === product.id"
+                :title="variant.colorName"
+                @click="selectColorVariant(variant)"
+              >
+                <i
+                  class="swatch"
+                  :style="{ background: variant.swatchColor || variant.color }"
+                  aria-hidden="true"
+                ></i>
+              </button>
             </div>
           </div>
 
@@ -142,11 +235,12 @@ function adicionarAoCarrinho() {
               type="button"
               :class="{ selected: selectedSize === size }"
               :aria-pressed="selectedSize === size"
-              @click="selectedSize = size"
+              @click="selectSize(size)"
             >
               {{ size }}
             </button>
           </div>
+          <p v-if="sizeError" class="size-error" role="alert">{{ sizeError }}</p>
 
           <button
             class="buy-button"
@@ -158,7 +252,7 @@ function adicionarAoCarrinho() {
           </button>
         </div>
 
-        <aside class="recommendation-box">
+        <aside v-if="recommendation" class="recommendation-box">
           <p>RECOMENDAÇÃO</p>
           <div class="mini-figure">
             <img :src="recommendation.image" :alt="recommendation.title" />
@@ -166,7 +260,35 @@ function adicionarAoCarrinho() {
           <h3>{{ recommendation.title }}</h3>
           <button @click="router.push(`/produto/${recommendation.id}`)">VER MODELO</button>
         </aside>
+
+        <aside v-else class="recommendation-box recommendation-box--unisex">
+          <p>UNISSEX</p>
+          <div class="mini-figure mini-figure--unisex">
+            <img :src="product.image" :alt="product.title" />
+          </div>
+          <h3>{{ product.title }}</h3>
+        </aside>
       </div>
+
+      <section v-if="product.descriptionProductFeatures" class="product-description">
+        <h2>Descrição do produto</h2>
+        <ul class="product-features">
+          <li v-for="feature in product.descriptionProductFeatures" :key="feature.title">
+            <strong>{{ feature.title }}</strong>
+            <template v-if="feature.system">
+              (<em>{{ feature.system }}</em
+              >)</template
+            >:
+            <template v-if="feature.parts">
+              <template v-for="(part, index) in feature.parts" :key="index">
+                <em v-if="part.emphasis === 'italic'">{{ part.text }}</em>
+                <template v-else>{{ part.text }}</template>
+              </template>
+            </template>
+            <template v-else>{{ feature.text }}</template>
+          </li>
+        </ul>
+      </section>
     </div>
   </section>
 </template>
@@ -208,6 +330,49 @@ function adicionarAoCarrinho() {
   grid-template-columns: 1.2fr 1fr 0.7fr;
   gap: 1.5rem;
   align-items: center;
+}
+
+.product-description {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(221, 228, 250, 0.8);
+}
+
+.product-description h2 {
+  margin: 0 0 0.65rem;
+  color: #f5f7ff;
+  font-size: 1.1rem;
+}
+
+.product-features {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.product-features li {
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  line-height: 1.7;
+}
+
+.product-features strong {
+  color: #f5f7ff;
+  font-weight: 800;
+}
+
+.product-features em {
+  color: #7ae5ff;
+}
+
+@media (max-width: 760px) {
+  .product-features {
+    grid-template-columns: 1fr;
+  }
 }
 
 .detail-visual {
@@ -410,6 +575,12 @@ function adicionarAoCarrinho() {
   background: rgba(75, 185, 255, 0.08);
 }
 
+.detail-tag--unisex {
+  border-color: rgba(142, 163, 255, 0.35);
+  color: #a8b8ff;
+  background: rgba(129, 140, 248, 0.1);
+}
+
 .detail-info h1 {
   margin: 1rem 0 0.6rem;
   font-size: clamp(2rem, 3vw, 3.2rem);
@@ -430,11 +601,20 @@ function adicionarAoCarrinho() {
   font-size: 1rem;
 }
 
+.description strong {
+  color: #f5f7ff;
+  font-weight: 800;
+}
+
+.description em {
+  color: #7ae5ff;
+}
+
 .swatches {
   margin-top: 1.5rem;
 }
 
-.swatches span {
+.swatches > span {
   display: block;
   font-size: 0.72rem;
   letter-spacing: 0.12em;
@@ -444,13 +624,36 @@ function adicionarAoCarrinho() {
 
 .swatch-row {
   display: flex;
-  gap: 0.7rem;
+  gap: 0.35rem;
+}
+
+.swatch-option {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.swatch-option:hover,
+.swatch-option:focus-visible,
+.swatch-option.selected {
+  border-color: #7ae5ff;
+  outline: none;
+}
+
+.swatch-option.selected {
+  box-shadow: 0 0 0 2px rgba(122, 229, 255, 0.18);
 }
 
 .swatch {
-  width: 22px;
-  height: 22px;
-  display: inline-block;
+  width: 23px;
+  height: 23px;
+  display: block;
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
@@ -479,6 +682,12 @@ function adicionarAoCarrinho() {
   border-color: #ff6adf;
   color: #ff9be9;
   box-shadow: inset 0 0 0 1px rgba(255, 106, 223, 0.16);
+}
+
+.size-error {
+  margin: 0.55rem 0 0;
+  color: #ff9be6;
+  font-size: 0.82rem;
 }
 
 .buy-button {
@@ -526,6 +735,15 @@ function adicionarAoCarrinho() {
   text-transform: uppercase;
 }
 
+.recommendation-box--unisex {
+  background: rgba(121, 135, 255, 0.05);
+  border-color: rgba(136, 163, 255, 0.25);
+}
+
+.recommendation-box--unisex p {
+  color: #99b2ff;
+}
+
 .mini-figure {
   height: 180px;
   border-radius: 18px;
@@ -540,6 +758,10 @@ function adicionarAoCarrinho() {
   height: 100%;
   object-fit: contain;
   mix-blend-mode: screen;
+}
+
+.mini-figure--unisex {
+  border: 1px solid rgba(153, 178, 255, 0.2);
 }
 
 .recommendation-box h3 {

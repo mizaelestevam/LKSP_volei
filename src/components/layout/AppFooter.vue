@@ -9,24 +9,18 @@
         <p>EVOLUÇÃO EM CADA PASSO.</p>
       </div>
 
-      <div class="footer-links">
+      <div class="footer-links institutional-block">
         <h3>INSTITUCIONAL</h3>
-        <ul>
-          <li>Sobre nós</li>
-          <li>Tecnologia</li>
-          <li>Sustentabilidade</li>
-          <li>Carreiras</li>
-        </ul>
-      </div>
-
-      <div class="footer-links">
-        <h3>AJUDA</h3>
-        <ul>
-          <li>Trocas e devoluções</li>
-          <li>Formas de pagamento</li>
-          <li>Entrega</li>
-          <li>FAQ</li>
-        </ul>
+        <div class="link-grid">
+          <ul>
+            <li><RouterLink to="/equipe">Sobre nós</RouterLink></li>
+            <li><RouterLink to="/categoria/tecnologia">Tecnologia</RouterLink></li>
+          </ul>
+          <ul>
+            <li>Sustentabilidade</li>
+            <li>Carreiras</li>
+          </ul>
+        </div>
       </div>
 
       <div class="newsletter">
@@ -48,6 +42,8 @@
 
 <style scoped>
 .site-footer {
+  position: relative;
+  overflow: hidden;
   background: rgba(3, 8, 15, 0.95);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   color: #edf5ff;
@@ -58,18 +54,39 @@
   max-width: 1360px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr 1.4fr;
+  grid-template-columns: 1.3fr 1.1fr 1.1fr 1.4fr;
   gap: 2rem;
+  align-items: start;
+}
+
+.institutional-block {
+  grid-column: 2 / span 2;
 }
 
 .brand {
   font-size: 3rem;
   font-weight: 900;
   letter-spacing: 0.08em;
-  background: linear-gradient(90deg, #f6f7ff, #ff92e2 35%, #7edcff 100%);
+  background: linear-gradient(90deg, #ff74df 0%, #d6b7ff 38%, #8ea4ff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  user-select: none;
+  text-shadow: 0 0 18px rgba(255, 116, 223, 0.26);
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease,
+    text-shadow 0.2s ease;
+}
+
+.brand:hover,
+.brand:focus-visible {
+  transform: translateY(-1px);
+  filter: drop-shadow(0 0 12px rgba(255, 116, 223, 0.8));
+  text-shadow:
+    0 0 22px rgba(255, 116, 223, 0.8),
+    0 0 30px rgba(142, 164, 255, 0.6);
+  outline: none;
 }
 
 .brand-block p {
@@ -96,6 +113,24 @@
   gap: 0.7rem;
   color: rgba(226, 233, 255, 0.72);
   font-size: 0.92rem;
+}
+
+.footer-links a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer-links a:hover,
+.footer-links a:focus-visible {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 1.5rem;
 }
 
 .newsletter-form {

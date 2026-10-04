@@ -15,7 +15,7 @@
       </button>
     </div>
     <div class="hero-image">
-      <img src="/booksImgs/memorias-postumas-de-bras-cubas.png" alt="Hero Image" />
+      <img src="/booksImgs/tenis 1.jpeg" alt="Hero Image" />
     </div>
   </section>
 </template>

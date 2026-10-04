@@ -9,11 +9,41 @@ const products = storeProducts
 const emit = defineEmits(['add-to-cart', 'remove-from-cart'])
 const activeFilter = ref('todos')
 const sortOrder = ref('')
+const selectedSizes = ref({})
 
 const visibleProducts = computed(() => {
-  const filteredProducts = products.filter(
-    (product) => activeFilter.value === 'todos' || product.gender === activeFilter.value,
-  )
+  const filteredProducts = products
+    .filter((product) => {
+      if (activeFilter.value === 'todos') return true
+
+      const isTennis = (product.tag || product.title || '').toUpperCase().includes('TÊNIS')
+
+      if (activeFilter.value === 'unissex') {
+        return product.gender === 'unissex' && !isTennis
+      }
+
+      if (activeFilter.value === 'masculino') {
+        return product.gender === 'masculino' || isTennis
+      }
+
+      if (activeFilter.value === 'feminino') {
+        return product.gender === 'feminino' || isTennis
+      }
+
+      return false
+    })
+    .sort((first, second) => {
+      const firstIsTennis = (first.tag || first.title || '').toUpperCase().includes('TÊNIS') ? 1 : 0
+      const secondIsTennis = (second.tag || second.title || '').toUpperCase().includes('TÊNIS')
+        ? 1
+        : 0
+
+      if (activeFilter.value === 'masculino' || activeFilter.value === 'feminino') {
+        return firstIsTennis - secondIsTennis
+      }
+
+      return 0
+    })
 
   if (sortOrder.value === 'price-asc') {
     return filteredProducts.sort((first, second) => first.price - second.price)
@@ -31,12 +61,15 @@ const visibleProducts = computed(() => {
 })
 
 function toggleCartItem(product) {
-  if (isInCart(product.id)) {
-    emit('remove-from-cart', product.id)
+  const size = selectedSizes.value[product.id]
+  if (!size) return
+
+  if (isInCart(product.id, size)) {
+    emit('remove-from-cart', product.id, size)
     return
   }
 
-  emit('add-to-cart', product)
+  emit('add-to-cart', { ...product, tamanho: size })
 }
 
 function abrirProduto(producto) {
@@ -123,6 +156,14 @@ function abrirProduto(producto) {
         >
           FEMININO
         </button>
+        <button
+          class="filter"
+          :class="{ active: activeFilter === 'unissex' }"
+          :aria-pressed="activeFilter === 'unissex'"
+          @click="activeFilter = 'unissex'"
+        >
+          UNISSEX
+        </button>
       </div>
       <select v-model="sortOrder" class="sort-button" aria-label="Ordenar produtos">
         <option value="">ORDENAR POR</option>
@@ -139,9 +180,6 @@ function abrirProduto(producto) {
         class="product-card"
         @click="abrirProduto(product)"
       >
-        <div class="product-tag" :class="{ 'product-tag--male': product.gender === 'masculino' }">
-          {{ product.tag }}
-        </div>
         <div class="product-figure">
           <img
             v-if="product.image"
@@ -152,19 +190,39 @@ function abrirProduto(producto) {
         </div>
         <h3>{{ product.title }}</h3>
         <div class="rating">
-          ★★★★★ <span>({{ product.rating }})</span>
+          <template v-if="product.rating"
+            >★★★★★ <span>({{ product.rating }})</span></template
+          >
+          <span v-else class="rating-new">KIT COMPLETO</span>
         </div>
         <div class="sizes">
-          <span>P</span><span>M</span><span>G</span><span>GG</span><span>XXG</span>
+          <button
+            v-for="size in ['P', 'M', 'G', 'GG', 'XXG']"
+            :key="size"
+            type="button"
+            :class="{ selected: selectedSizes[product.id] === size }"
+            :aria-pressed="selectedSizes[product.id] === size"
+            :aria-label="`Selecionar tamanho ${size} para ${product.title}`"
+            @click.stop="selectedSizes[product.id] = size"
+          >
+            {{ size }}
+          </button>
         </div>
         <div class="price">R$ {{ product.price.toFixed(2).replace('.', ',') }}</div>
         <button
           type="button"
-          :class="{ 'is-added': isInCart(product.id) }"
-          :aria-pressed="isInCart(product.id)"
+          :class="{ 'is-added': isInCart(product.id, selectedSizes[product.id]) }"
+          :aria-pressed="isInCart(product.id, selectedSizes[product.id])"
+          :disabled="!selectedSizes[product.id]"
           @click.stop="toggleCartItem(product)"
         >
-          {{ isInCart(product.id) ? 'RETIRAR DO CARRINHO' : 'ADICIONAR AO CARRINHO' }}
+          {{
+            !selectedSizes[product.id]
+              ? 'ESCOLHA UM TAMANHO'
+              : isInCart(product.id, selectedSizes[product.id])
+                ? 'RETIRAR DO CARRINHO'
+                : 'ADICIONAR AO CARRINHO'
+          }}
         </button>
       </article>
     </div>
@@ -383,25 +441,6 @@ function abrirProduto(producto) {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
 }
 
-.product-tag {
-  position: absolute;
-  top: 0.85rem;
-  left: 0.85rem;
-  z-index: 2;
-  background: linear-gradient(90deg, #f748c5, #ff8df2);
-  color: #0c1020;
-  font-size: 0.58rem;
-  letter-spacing: 0.1em;
-  font-weight: 800;
-  padding: 0.35rem 0.5rem;
-  border-radius: 999px;
-}
-
-.product-tag--male {
-  background: linear-gradient(90deg, #54c9f0, #8be6ff);
-  color: #071522;
-}
-
 .product-figure {
   position: relative;
   height: 230px;
@@ -446,6 +485,13 @@ function abrirProduto(producto) {
   color: rgba(225, 232, 255, 0.7);
 }
 
+.rating-new {
+  color: #7ae5ff !important;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
 .sizes {
   display: flex;
   gap: 0.4rem;
@@ -453,7 +499,7 @@ function abrirProduto(producto) {
   flex-wrap: wrap;
 }
 
-.sizes span {
+.sizes button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -464,6 +510,13 @@ function abrirProduto(producto) {
   background: rgba(255, 255, 255, 0.03);
   color: rgba(236, 241, 255, 0.75);
   font-size: 0.62rem;
+  cursor: pointer;
+}
+
+.sizes button.selected {
+  border-color: #7ae5ff;
+  background: rgba(122, 229, 255, 0.14);
+  color: #7ae5ff;
 }
 
 .price {
@@ -490,6 +543,13 @@ function abrirProduto(producto) {
   border-color: rgba(113, 220, 255, 0.75);
   background: rgba(75, 185, 255, 0.12);
   color: #8be6ff;
+}
+
+.product-card > button:disabled {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(236, 241, 255, 0.6);
+  cursor: not-allowed;
 }
 
 @media (max-width: 1080px) {

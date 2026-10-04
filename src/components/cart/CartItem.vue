@@ -16,7 +16,7 @@ const emit = defineEmits(['decrease-qty', 'increase-qty'])
       <div class="text-details">
         <h3 class="item-titulo">{{ props.item.title }}</h3>
         <p class="item-autor">{{ props.item.autor || props.item.gender }}</p>
-        <p v-if="props.item.tamanho" class="item-size">Tamanho: {{ props.item.tamanho }}</p>
+        <p class="item-size">Tamanho: {{ props.item.tamanho || 'Não informado' }}</p>
         <p class="item-preco">R$ {{ props.item.preco.toFixed(2).replace('.', ',') }}</p>
       </div>
     </div>

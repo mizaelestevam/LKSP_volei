@@ -1,32 +1,168 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AppFooter from './components/layout/AppFooter.vue'
+import { storeProducts } from './data/storeProducts.js'
 import {
   addToCart,
   cartCount,
   cartItems,
   cartTotal,
+  clearCart,
   decreaseQuantity,
   increaseQuantity,
   removeFromCart,
 } from './data/cart.js'
 
 const searchQuery = ref('')
+const isSearchOpen = ref(false)
+const profileOpen = ref(false)
+const registeredProfile = ref(null)
+const profileEditing = ref(false)
+const profileError = ref('')
+const deleteConfirmation = ref(false)
+const checkoutConfirmation = ref(null)
 const router = useRouter()
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+})
 
-const handleSearch = () => {
-  console.log('Pesquisando por:', searchQuery.value)
+function emptyProfile() {
+  return { name: '', email: '', password: '', confirmPassword: '', image: '' }
+}
+
+const profileForm = ref(emptyProfile())
+const isRegisteredProfileView = computed(
+  () => Boolean(registeredProfile.value) && !profileEditing.value,
+)
+
+function openProfile() {
+  profileOpen.value = true
+  profileError.value = ''
+  deleteConfirmation.value = false
+  profileEditing.value = !registeredProfile.value
+  profileForm.value = registeredProfile.value
+    ? { ...registeredProfile.value, confirmPassword: registeredProfile.value.password }
+    : emptyProfile()
+}
+
+function closeProfile() {
+  profileOpen.value = false
+  deleteConfirmation.value = false
+  profileError.value = ''
+}
+
+function editProfile() {
+  profileForm.value = {
+    ...registeredProfile.value,
+    confirmPassword: registeredProfile.value.password,
+  }
+  profileEditing.value = true
+  profileError.value = ''
+}
+
+function cancelProfileEdit() {
+  profileForm.value = {
+    ...registeredProfile.value,
+    confirmPassword: registeredProfile.value.password,
+  }
+  profileEditing.value = false
+  profileError.value = ''
+}
+
+function handleProfileImage(event) {
+  const file = event.target.files?.[0]
+  if (!file) return
+
+  if (!file.type.startsWith('image/')) {
+    profileError.value = 'Escolha um arquivo de imagem.'
+    return
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    profileError.value = 'A imagem deve ter no máximo 5 MB.'
+    return
+  }
+
+  const reader = new FileReader()
+  reader.addEventListener('load', () => {
+    profileForm.value.image = String(reader.result || '')
+    profileError.value = ''
+  })
+  reader.readAsDataURL(file)
+}
+
+function saveProfile() {
+  if (profileForm.value.password.length < 6) {
+    profileError.value = 'A senha deve ter pelo menos 6 caracteres.'
+    return
+  }
+
+  if (profileForm.value.password !== profileForm.value.confirmPassword) {
+    profileError.value = 'As senhas não coincidem.'
+    return
+  }
+
+  registeredProfile.value = { ...profileForm.value, name: profileForm.value.name.trim() }
+  profileEditing.value = false
+  profileError.value = ''
+  deleteConfirmation.value = false
+}
+
+function deleteProfile() {
+  registeredProfile.value = null
+  profileForm.value = emptyProfile()
+  profileEditing.value = true
+  deleteConfirmation.value = false
+  profileError.value = ''
+}
+
+function normalizeSearchText(value) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+}
+
+const searchResults = computed(() => {
+  const terms = normalizeSearchText(searchQuery.value).trim().split(/\s+/).filter(Boolean)
+  if (!terms.length) return []
+
+  return storeProducts
+    .filter((product) => {
+      const searchableText = normalizeSearchText(
+        [product.title, product.tag, product.description, product.colorName, product.gender]
+          .filter(Boolean)
+          .join(' '),
+      )
+      return terms.every((term) => searchableText.includes(term))
+    })
+    .slice(0, 6)
+})
+
+function openProduct(product) {
+  searchQuery.value = product.title
+  isSearchOpen.value = false
+  router.push(`/produto/${product.id}`)
+}
+
+function handleSearch() {
+  const query = searchQuery.value.trim()
+  if (!query) return
+
+  isSearchOpen.value = false
+  router.push({ name: 'Search', query: { q: query } })
 }
 
 const navigation = [
   { label: 'HOME', href: '/' },
-  { label: 'MASCULINO', href: '#' },
-  { label: 'FEMININO', href: '#' },
-  { label: 'TÊNIS', href: '#' },
-  { label: 'UNIFORMES', href: '#' },
-  { label: 'TECNOLOGIA', href: '#' },
-  { label: 'SOBRE', href: '/equipe' },
+  { label: 'MASCULINO', href: '/categoria/masculino' },
+  { label: 'FEMININO', href: '/categoria/feminino' },
+  { label: 'TÊNIS', href: '/categoria/tenis' },
+  { label: 'UNIFORMES', href: '/categoria/uniformes' },
+  { label: 'TECNOLOGIA', href: '/categoria/tecnologia' },
+  { label: 'SOBRE-NÓS', href: '/equipe' },
 ]
 
 const categoryDetails = {
@@ -104,6 +240,11 @@ function openMenuPanel(item, event) {
     return
   }
 
+  if (item.href.startsWith('/categoria/')) {
+    activePanel.value = null
+    return
+  }
+
   if (item.href === '/equipe') {
     activePanel.value = null
     return
@@ -114,6 +255,13 @@ function openMenuPanel(item, event) {
 
 function closePanel() {
   activePanel.value = null
+}
+
+function completeCheckout() {
+  if (!cartItems.value.length) return
+
+  checkoutConfirmation.value = cartTotal.value
+  clearCart()
 }
 </script>
 
@@ -135,17 +283,52 @@ function closePanel() {
       </nav>
 
       <div class="header-tools">
-        <div class="search-wrapper">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Buscar produtos..."
-            class="search-input"
-            @keyup.enter="handleSearch"
-          />
-          <button @click="handleSearch" class="search-button" title="Buscar">
-            <i class="mdi mdi-magnify"></i>
-          </button>
+        <div class="search-container">
+          <div class="search-wrapper">
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Buscar produtos..."
+              class="search-input"
+              role="combobox"
+              aria-label="Buscar produtos"
+              aria-autocomplete="list"
+              :aria-expanded="isSearchOpen && Boolean(searchQuery.trim())"
+              @focus="isSearchOpen = true"
+              @input="isSearchOpen = true"
+              @keyup.enter="handleSearch"
+              @keyup.esc="isSearchOpen = false"
+            />
+            <button @click="handleSearch" class="search-button" title="Buscar" aria-label="Buscar">
+              <i class="mdi mdi-magnify"></i>
+            </button>
+          </div>
+
+          <div
+            v-if="isSearchOpen && searchQuery.trim()"
+            class="search-results"
+            role="listbox"
+            aria-label="Resultados da busca"
+          >
+            <button
+              v-for="product in searchResults"
+              :key="product.id"
+              class="search-result"
+              type="button"
+              role="option"
+              @click="openProduct(product)"
+            >
+              <img :src="product.image" alt="" class="search-result-image" />
+              <span class="search-result-info">
+                <strong>{{ product.title }}</strong>
+                <small>{{ product.tag }}</small>
+              </span>
+              <span class="search-result-price">
+                R$ {{ product.price.toFixed(2).replace('.', ',') }}
+              </span>
+            </button>
+            <p v-if="!searchResults.length" class="search-empty">Nenhum produto encontrado.</p>
+          </div>
         </div>
 
         <div class="icons-group">
@@ -153,13 +336,137 @@ function closePanel() {
             <i class="mdi mdi-cart-outline"></i>
             <span v-if="cartCount" class="cart-count">{{ cartCount }}</span>
           </RouterLink>
-          <button class="icon-button" title="Perfil">
+          <button class="icon-button" title="Perfil" aria-label="Abrir perfil" @click="openProfile">
             <i class="mdi mdi-account"></i>
           </button>
         </div>
       </div>
     </div>
   </header>
+
+  <div v-if="profileOpen" class="profile-backdrop" tabindex="-1">
+    <section class="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profile-title">
+      <header class="profile-modal-header">
+        <div>
+          <p class="profile-kicker">CONTA LKSP</p>
+          <h2 id="profile-title">{{ registeredProfile ? 'Meu perfil' : 'Criar perfil' }}</h2>
+        </div>
+        <button
+          class="profile-close"
+          type="button"
+          aria-label="Fechar perfil"
+          @click="closeProfile"
+        >
+          ×
+        </button>
+      </header>
+
+      <div v-if="registeredProfile" class="registered-badge">
+        <i class="mdi mdi-check-circle"></i>
+        CADASTRADO
+      </div>
+
+      <form class="profile-form" @submit.prevent="saveProfile">
+        <div class="profile-avatar-block">
+          <div class="profile-avatar">
+            <img v-if="profileForm.image" :src="profileForm.image" alt="Foto do perfil" />
+            <i v-else class="mdi mdi-account"></i>
+          </div>
+          <label v-if="!isRegisteredProfileView" class="profile-image-button">
+            {{ profileForm.image ? 'Alterar imagem' : 'Adicionar imagem' }}
+            <input
+              type="file"
+              accept="image/*"
+              aria-label="Adicionar imagem de perfil"
+              @change="handleProfileImage"
+            />
+          </label>
+        </div>
+
+        <label class="profile-field">
+          <span>Nome</span>
+          <input
+            v-model="profileForm.name"
+            type="text"
+            autocomplete="name"
+            placeholder="Seu nome"
+            required
+            :readonly="isRegisteredProfileView"
+          />
+        </label>
+        <label class="profile-field">
+          <span>E-mail</span>
+          <input
+            v-model="profileForm.email"
+            type="email"
+            autocomplete="email"
+            placeholder="voce@exemplo.com"
+            required
+            :readonly="isRegisteredProfileView"
+          />
+        </label>
+        <label class="profile-field">
+          <span>Senha</span>
+          <input
+            v-model="profileForm.password"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Mínimo de 6 caracteres"
+            minlength="6"
+            required
+            :readonly="isRegisteredProfileView"
+          />
+        </label>
+        <label class="profile-field">
+          <span>Confirmar senha</span>
+          <input
+            v-model="profileForm.confirmPassword"
+            type="password"
+            autocomplete="new-password"
+            placeholder="Digite a senha novamente"
+            minlength="6"
+            required
+            :readonly="isRegisteredProfileView"
+          />
+        </label>
+
+        <p v-if="profileError" class="profile-error" role="alert">{{ profileError }}</p>
+
+        <button v-if="!isRegisteredProfileView" class="profile-primary" type="submit">
+          {{ registeredProfile ? 'SALVAR ALTERAÇÕES' : 'FINALIZAR CADASTRO' }}
+        </button>
+
+        <div v-if="registeredProfile && !deleteConfirmation" class="profile-actions">
+          <button v-if="!profileEditing" class="profile-primary" type="button" @click="editProfile">
+            EDITAR PERFIL
+          </button>
+          <button
+            v-if="profileEditing"
+            class="profile-secondary"
+            type="button"
+            @click="cancelProfileEdit"
+          >
+            CANCELAR EDIÇÃO
+          </button>
+          <button class="profile-delete" type="button" @click="deleteConfirmation = true">
+            EXCLUIR PERFIL
+          </button>
+        </div>
+
+        <div v-if="deleteConfirmation" class="delete-confirmation">
+          <p>Excluir os dados deste perfil?</p>
+          <div>
+            <button class="profile-delete" type="button" @click="deleteProfile">
+              CONFIRMAR EXCLUSÃO
+            </button>
+            <button class="profile-secondary" type="button" @click="deleteConfirmation = false">
+              VOLTAR
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </div>
 
   <div v-if="activePanel" class="menu-panel-backdrop" @click="closePanel"></div>
   <aside
@@ -214,6 +521,7 @@ function closePanel() {
         @increase-qty="increaseQuantity"
         @decrease-qty="decreaseQuantity"
         @go-to-store="router.push('/')"
+        @checkout="completeCheckout"
       />
       <component
         v-else
@@ -223,6 +531,25 @@ function closePanel() {
       />
     </RouterView>
   </main>
+
+  <div v-if="checkoutConfirmation !== null" class="checkout-backdrop">
+    <section
+      class="checkout-confirmation"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="checkout-title"
+    >
+      <span class="checkout-check"><i class="mdi mdi-check"></i></span>
+      <p class="checkout-kicker">PEDIDO LKSP</p>
+      <h2 id="checkout-title">Compra confirmada</h2>
+      <p class="checkout-message">Sua compra foi realizada com sucesso.</p>
+      <div class="checkout-total">
+        <span>Valor total</span>
+        <strong>{{ currencyFormatter.format(checkoutConfirmation) }}</strong>
+      </div>
+      <button class="checkout-close" @click="checkoutConfirmation = null">CONTINUAR</button>
+    </section>
+  </div>
 
   <AppFooter />
 </template>
@@ -299,15 +626,102 @@ function closePanel() {
   min-width: 440px;
 }
 
+.search-container {
+  position: relative;
+  width: 100%;
+  min-width: 240px;
+}
+
 .search-wrapper {
   display: flex;
   align-items: center;
   width: 100%;
-  min-width: 240px;
+  min-width: 0;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 12px;
   overflow: hidden;
+}
+
+.search-results {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 40;
+  width: 100%;
+  max-height: min(360px, 60vh);
+  overflow-y: auto;
+  padding: 0.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: #101a29;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.38);
+}
+
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  min-height: 58px;
+  padding: 0.55rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #edf6ff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-result:hover,
+.search-result:focus-visible {
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.search-result-image {
+  width: 40px;
+  height: 42px;
+  flex: 0 0 40px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.search-result-info {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.search-result-info strong,
+.search-result-info small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-result-info strong {
+  font-size: 0.82rem;
+}
+
+.search-result-info small {
+  color: rgba(226, 233, 255, 0.62);
+  font-size: 0.68rem;
+}
+
+.search-result-price {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.search-empty {
+  margin: 0;
+  padding: 0.9rem;
+  color: rgba(226, 233, 255, 0.72);
+  font-size: 0.82rem;
 }
 
 .search-input {
@@ -355,6 +769,210 @@ function closePanel() {
   cursor: pointer;
 }
 
+.profile-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(2, 7, 18, 0.78);
+  backdrop-filter: blur(8px);
+}
+
+.profile-modal {
+  width: min(500px, 100%);
+  max-height: min(760px, calc(100dvh - 2rem));
+  overflow-y: auto;
+  padding: 1.5rem;
+  border: 1px solid rgba(122, 229, 255, 0.28);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 95% 0%, rgba(255, 95, 210, 0.13), transparent 32%),
+    linear-gradient(155deg, #101b2b, #07111f 72%);
+  box-shadow:
+    0 28px 80px rgba(0, 0, 0, 0.58),
+    0 0 32px rgba(122, 229, 255, 0.08);
+  color: #edf5ff;
+}
+
+.profile-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profile-kicker {
+  margin: 0 0 0.25rem;
+  color: #7ae5ff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.profile-modal-header h2 {
+  margin: 0;
+  color: #f5f7ff;
+  font-size: 1.55rem;
+}
+
+.profile-close {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  color: #edf5ff;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.registered-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+  padding: 0.35rem 0.65rem;
+  border: 1px solid rgba(122, 229, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(122, 229, 255, 0.08);
+  color: #7ae5ff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.profile-form {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.profile-avatar-block {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  margin: 0.1rem 0 0.25rem;
+}
+
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 82px;
+  height: 82px;
+  overflow: hidden;
+  border: 2px solid rgba(122, 229, 255, 0.7);
+  border-radius: 50%;
+  background: linear-gradient(145deg, rgba(122, 229, 255, 0.18), rgba(255, 95, 210, 0.22));
+  color: #dff8ff;
+  font-size: 2.3rem;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-image-button {
+  position: relative;
+  overflow: hidden;
+  color: #ff9be6;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-image-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+.profile-field {
+  display: grid;
+  gap: 0.35rem;
+  color: rgba(237, 245, 255, 0.82);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.profile-field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 8px;
+  outline: none;
+  background: rgba(255, 255, 255, 0.055);
+  color: #f5f7ff;
+  font-size: 0.9rem;
+}
+
+.profile-field input:focus {
+  border-color: #7ae5ff;
+  box-shadow: 0 0 0 2px rgba(122, 229, 255, 0.13);
+}
+
+.profile-field input[readonly] {
+  color: rgba(237, 245, 255, 0.76);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.profile-error {
+  margin: 0;
+  color: #ff9be6;
+  font-size: 0.82rem;
+}
+
+.profile-primary,
+.profile-secondary,
+.profile-delete {
+  min-height: 44px;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.profile-primary {
+  background: linear-gradient(90deg, #ff74df, #7ae5ff);
+  color: #081321;
+}
+
+.profile-secondary {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.04);
+  color: #edf5ff;
+}
+
+.profile-delete {
+  border-color: rgba(255, 116, 223, 0.35);
+  background: rgba(255, 116, 223, 0.08);
+  color: #ff9be6;
+}
+
+.profile-actions,
+.delete-confirmation > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.delete-confirmation p {
+  margin: 0 0 0.65rem;
+  color: #f5f7ff;
+  font-size: 0.88rem;
+}
+
 .cart-count {
   position: absolute;
   top: -5px;
@@ -369,6 +987,94 @@ function closePanel() {
   font-weight: 900;
   line-height: 17px;
   text-align: center;
+}
+
+.checkout-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(2, 7, 18, 0.78);
+  backdrop-filter: blur(7px);
+}
+
+.checkout-confirmation {
+  width: min(420px, 100%);
+  padding: 2rem;
+  border: 1px solid rgba(122, 229, 255, 0.28);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 95% 0%, rgba(255, 95, 210, 0.13), transparent 35%),
+    linear-gradient(155deg, #101b2b, #07111f 72%);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55);
+  color: #edf5ff;
+  text-align: center;
+}
+
+.checkout-check {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 1rem;
+  border: 1px solid rgba(122, 229, 255, 0.5);
+  border-radius: 50%;
+  background: rgba(122, 229, 255, 0.12);
+  color: #7ae5ff;
+  font-size: 1.7rem;
+}
+
+.checkout-kicker {
+  margin: 0 0 0.35rem;
+  color: #ff9be6;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.checkout-confirmation h2 {
+  margin: 0;
+  color: #f5f7ff;
+  font-size: 1.55rem;
+}
+
+.checkout-message {
+  margin: 0.5rem 0 1.3rem;
+  color: rgba(237, 245, 255, 0.72);
+  font-size: 0.9rem;
+}
+
+.checkout-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(237, 245, 255, 0.75);
+  font-size: 0.88rem;
+}
+
+.checkout-total strong {
+  color: #7ae5ff;
+  font-size: 1.1rem;
+}
+
+.checkout-close {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 1.2rem;
+  border: 0;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #ff74df, #7ae5ff);
+  color: #081321;
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  cursor: pointer;
 }
 
 .page-shell {
@@ -612,6 +1318,14 @@ function closePanel() {
 
   .icons-group {
     justify-content: center;
+  }
+
+  .profile-modal {
+    padding: 1.1rem;
+  }
+
+  .delete-confirmation > div {
+    grid-template-columns: 1fr;
   }
 }
 </style>
