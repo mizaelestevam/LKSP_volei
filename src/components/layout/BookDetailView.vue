@@ -12,6 +12,7 @@ const currentImageIndex = ref(0)
 const selectedSize = ref('')
 const sizeError = ref('')
 const isPortraitImage = ref(false)
+const shoeSizes = Array.from({ length: 13 }, (_, index) => String(34 + index))
 
 const catalog = storeProducts
 
@@ -68,6 +69,13 @@ const productInCart = computed(
 )
 
 const productImages = computed(() => product.value.images || [])
+
+function getProductSizes(targetProduct) {
+  const normalizedText = `${targetProduct.tag || ''} ${targetProduct.title || ''}`.toUpperCase()
+  return normalizedText.includes('TÊNIS') || normalizedText.includes('TENIS')
+    ? shoeSizes
+    : ['P', 'M', 'G', 'GG', 'XXG']
+}
 
 const currentImage = computed(() => {
   const images = productImages.value
@@ -230,7 +238,7 @@ function adicionarAoCarrinho() {
 
           <div class="sizes">
             <button
-              v-for="size in ['P', 'M', 'G', 'GG', 'XXG']"
+              v-for="size in getProductSizes(product)"
               :key="size"
               type="button"
               :class="{ selected: selectedSize === size }"

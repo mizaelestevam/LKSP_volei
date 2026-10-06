@@ -11,6 +11,15 @@ const activeFilter = ref('todos')
 const sortOrder = ref('')
 const selectedSizes = ref({})
 
+const shoeSizes = Array.from({ length: 13 }, (_, index) => String(34 + index))
+
+function getProductSizes(product) {
+  const normalizedText = `${product.tag || ''} ${product.title || ''}`.toUpperCase()
+  return normalizedText.includes('TÊNIS') || normalizedText.includes('TENIS')
+    ? shoeSizes
+    : ['P', 'M', 'G', 'GG', 'XXG']
+}
+
 const visibleProducts = computed(() => {
   const filteredProducts = products
     .filter((product) => {
@@ -82,18 +91,21 @@ function abrirProduto(producto) {
     <div class="hero-overlay"></div>
 
     <div class="hero-content">
-      <div class="eyebrow">UNIFORMES</div>
+      <div class="eyebrow">LKSP SPORTSTECH</div>
       <h1>
-        VÔLEI DE QUADRA
-        <span>DESEMPENHO EM CADA MOVIMENTO.</span>
+        TECNOLOGIA QUE
+        <span>MOVE O ESPORTE.</span>
       </h1>
 
       <p>
-        Uniformes desenvolvidos com tecnologia de ponta para performance, conforto e estilo. Mais
-        leve, mais respirável e com o acabamento ideal para o alto rendimento.
+        Inovação em cada movimento.<br />
+        <br />
+        Desenvolvemos soluções esportivas que integram tecnologia, desempenho e conforto. Do
+        vestuário inteligente aos equipamentos conectados, transformamos a experiência dentro e
+        fora das quadras.
       </p>
 
-      <a class="cta-button" href="#catalogo">EXPLORAR COLEÇÃO <span>→</span></a>
+      <a class="cta-button" href="#catalogo">CONHEÇA A LKSP <span>→</span></a>
     </div>
 
     <div class="hero-features">
@@ -197,7 +209,7 @@ function abrirProduto(producto) {
         </div>
         <div class="sizes">
           <button
-            v-for="size in ['P', 'M', 'G', 'GG', 'XXG']"
+            v-for="size in getProductSizes(product)"
             :key="size"
             type="button"
             :class="{ selected: selectedSizes[product.id] === size }"
@@ -271,7 +283,7 @@ function abrirProduto(producto) {
 
 .eyebrow {
   color: #b3d8ff;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.12em;
   font-size: 0.8rem;
   font-weight: 800;
   margin-bottom: 1rem;
@@ -281,7 +293,7 @@ function abrirProduto(producto) {
   margin: 0;
   font-size: clamp(2.8rem, 5vw, 5rem);
   line-height: 0.95;
-  letter-spacing: -0.05em;
+  letter-spacing: -0.04em;
   font-weight: 900;
   color: #f5f8ff;
 }
@@ -289,7 +301,7 @@ function abrirProduto(producto) {
 .hero-content h1 span {
   display: block;
   font-size: clamp(0.9rem, 1.8vw, 1.3rem);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.04em;
   color: rgba(255, 255, 255, 0.7);
   margin-top: 0.8rem;
 }
@@ -303,19 +315,23 @@ function abrirProduto(producto) {
 }
 
 .cta-button {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 2rem;
   border: none;
   background: linear-gradient(90deg, #f3a0ff, #bc6eff 48%, #78d7ff);
   color: #0f1425;
   font-weight: 900;
   font-size: 0.95rem;
-  letter-spacing: 0.08em;
-  padding: 1rem 2rem;
+  letter-spacing: 0.04em;
+  padding: 1rem 2.4rem;
   border-radius: 0.8rem;
   cursor: pointer;
   box-shadow: 0 10px 30px rgba(191, 113, 255, 0.4);
   text-decoration: none;
+  min-width: 360px;
+  text-align: center;
 }
 
 .cta-button span {

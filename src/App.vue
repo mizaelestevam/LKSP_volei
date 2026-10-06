@@ -278,7 +278,7 @@ const navigation = [
   { label: 'TÊNIS', href: '/categoria/tenis', icon: 'mdi-shoe-sneaker' },
   { label: 'UNIFORMES', href: '/categoria/uniformes', icon: 'mdi-tshirt-crew-outline' },
   { label: 'TECNOLOGIA', href: '/categoria/tecnologia', icon: 'mdi-lightning-bolt-outline' },
-  { label: 'SOBRE-NÓS', href: '/equipe', icon: 'mdi-information-outline' },
+  { label: 'SOBRE NÓS', href: '/equipe', icon: 'mdi-information-outline' },
 ]
 
 const categoryDetails = {

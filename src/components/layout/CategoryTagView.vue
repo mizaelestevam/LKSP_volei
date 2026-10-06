@@ -11,6 +11,7 @@ const selectedSizes = ref({})
 
 const tagParam = computed(() => (route.params.tag || '').toLowerCase())
 const isSearchPage = computed(() => route.name === 'Search')
+const shoeSizes = Array.from({ length: 13 }, (_, index) => String(34 + index))
 const searchQuery = computed(() => {
   const query = route.query.q
   return Array.isArray(query) ? query[0] || '' : query || ''
@@ -23,6 +24,13 @@ function normalizeSearchText(value) {
     .toLocaleLowerCase('pt-BR')
 }
 
+function getProductSizes(product) {
+  const normalizedText = `${product.tag || ''} ${product.title || ''}`.toUpperCase()
+  return normalizedText.includes('TÊNIS') || normalizedText.includes('TENIS')
+    ? shoeSizes
+    : ['P', 'M', 'G', 'GG', 'XXG']
+}
+
 const categoryTitle = computed(() => {
   if (isSearchPage.value) return 'RESULTADOS DA BUSCA'
 
@@ -33,6 +41,9 @@ const categoryTitle = computed(() => {
     tenis: 'TÊNIS',
     uniformes: 'UNIFORMES',
     tecnologia: 'TECNOLOGIA',
+    sobre: 'SOBRE NÓS',
+    'sobre-nos': 'SOBRE NÓS',
+    sobrenos: 'SOBRE NÓS',
   }
 
   return map[tagParam.value] || 'PRODUTOS'
@@ -108,9 +119,14 @@ const products = computed(() => {
   }
 
   if (slug === 'tecnologia') {
-    return storeProducts.filter((product) =>
+    const result = storeProducts.filter((product) =>
       (product.tag || product.title || '').toUpperCase().includes('RELÓGIO'),
     )
+    return result.length ? result : storeProducts
+  }
+
+  if (slug === 'sobre' || slug === 'sobre-nos' || slug === 'sobrenos') {
+    return storeProducts
   }
 
   return storeProducts
@@ -166,7 +182,7 @@ function toggleCartItem(product) {
         </div>
         <div class="sizes">
           <button
-            v-for="size in ['P', 'M', 'G', 'GG', 'XXG']"
+            v-for="size in getProductSizes(product)"
             :key="size"
             type="button"
             :class="{ selected: selectedSizes[product.id] === size }"

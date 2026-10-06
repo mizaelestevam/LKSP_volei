@@ -14,7 +14,8 @@ function loadCartItems() {
         Number.isInteger(item.quantidade) &&
         item.quantidade > 0,
     )
-  } catch {
+  } catch (error) {
+    console.error('Não foi possível carregar o carrinho salvo.', error)
     return []
   }
 }
@@ -36,8 +37,8 @@ export function isInCart(productId, size) {
 function saveCart() {
   try {
     localStorage.setItem(storageKey, JSON.stringify(cartItems.value))
-  } catch {
-    return
+  } catch (error) {
+    console.error('Não foi possível salvar o carrinho neste navegador.', error)
   }
 }
 
