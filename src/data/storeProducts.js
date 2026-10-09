@@ -79,6 +79,8 @@ export const storeProducts = [
       '/booksImgs/tenis 4.jpeg',
       '/booksImgs/tenis 5.jpeg',
       '/booksImgs/tenis 6.jpeg',
+      '/booksImgs/caixa de sapatos.jpeg',
+
     ],
     description: aeroestratusDescription,
     descriptionLead: 'Tênis inteligente de alta performance para voleibol.',

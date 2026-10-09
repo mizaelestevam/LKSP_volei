@@ -9,8 +9,9 @@ const membros = [
     imagem: '/booksImgs/WhatsApp Image 2026-10-01 at 18.43.57.jpeg',
     descricoes: [
       {
-        titulo: 'L — Liberdade',
-        texto: 'O poder de ir mais longe sem que nada o prenda a cada passo.',
+titulo: 'K — Energia Cinética',
+        texto: 'Transforme todo impacto em impulso e movimento puro.',
+
       },
     ],
   },
@@ -18,17 +19,7 @@ const membros = [
     nome: 'Sara',
     imagem: '/booksImgs/WhatsApp Image 2026-10-01 at 18.13.13.jpeg',
     descricoes: [
-      {
-        titulo: 'K — Energia Cinética',
-        texto: 'Transforme todo impacto em impulso e movimento puro.',
-      },
-    ],
-  },
-  {
-    nome: 'Lavinia',
-    imagem: '/booksImgs/WhatsApp Image 2026-10-01 at 18.10.27.jpeg',
-    descricoes: [
-      {
+     {
         titulo: 'S — Tecnologia',
         texto:
           'Tecnologia aplicada ao esporte, com soluções que conectam desempenho, conforto e inovação.',
@@ -39,7 +30,19 @@ const membros = [
       },
     ],
   },
+  {
+    nome: 'Lavinia',
+    imagem: '/booksImgs/WhatsApp Image 2026-10-01 at 18.10.27.jpeg',
+    descricoes: [
+      {
+        titulo: 'L — Liberdade',
+        texto: 'O poder de ir mais longe sem que nada o prenda a cada passo.'
+      },
+      
+    ],
+  },
 ]
+
 
 function selecionarMembro(membro) {
   membroSelecionado.value = membro
