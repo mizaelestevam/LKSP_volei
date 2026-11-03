@@ -224,7 +224,7 @@ function toggleCartItem(product) {
 
 <style scoped>
 .category-page {
-  max-width: 1380px;
+  max-width: 1360px;
   margin: 0 auto;
   padding: 2rem 2rem 4rem;
 }
@@ -234,13 +234,14 @@ function toggleCartItem(product) {
 }
 
 .back-button {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.02);
-  color: #ebf2ff;
-  padding: 0.7rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(14, 26, 39, 0.9);
+  color: rgba(227, 238, 255, 0.82);
+  padding: 0.8rem 1.1rem;
   border-radius: 999px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
 }
 
@@ -282,7 +283,7 @@ function toggleCartItem(product) {
 .product-figure {
   position: relative;
   height: 230px;
-  margin: 0.5rem 0 1rem;
+  margin: 1.5rem 0 1rem;
   border-radius: 16px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
   overflow: hidden;
@@ -297,35 +298,38 @@ function toggleCartItem(product) {
   height: 100%;
   object-fit: cover;
   display: block;
+  mix-blend-mode: screen;
   filter: drop-shadow(0 16px 24px rgba(0, 0, 0, 0.28));
 }
 
 .product-card h3 {
-  margin: 0.2rem 0 0.6rem;
-  font-size: 1.2rem;
-  line-height: 1.2;
+  color: #f5f8ff;
+  margin: 0.75rem 0 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  min-height: 48px;
 }
 
 .rating {
-  color: #ffd96d;
-  font-size: 0.9rem;
+  color: #ffce66;
+  font-size: 0.7rem;
 }
 
 .rating span {
-  color: rgba(228, 236, 255, 0.7);
+  color: rgba(225, 232, 255, 0.7);
 }
 
 .rating-new {
   color: #7ae5ff !important;
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.08em;
 }
 
 .sizes {
   display: flex;
-  gap: 0.5rem;
-  margin-top: 0.8rem;
+  gap: 0.4rem;
+  margin: 0.85rem 0;
   flex-wrap: wrap;
 }
 
@@ -333,13 +337,13 @@ function toggleCartItem(product) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.72rem;
-  color: #edf5ff;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(236, 241, 255, 0.75);
+  font-size: 0.62rem;
   cursor: pointer;
 }
 
@@ -350,32 +354,35 @@ function toggleCartItem(product) {
 }
 
 .price {
-  margin-top: 0.9rem;
-  font-size: 1.6rem;
-  font-weight: 900;
-  letter-spacing: -0.04em;
+  color: #ff84d9;
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin: 0.3rem 0 1rem;
 }
 
-.product-card button {
+.product-card > button {
   width: 100%;
-  margin-top: 1rem;
-  border: none;
-  border-radius: 12px;
-  padding: 0.9rem 1rem;
-  background: linear-gradient(90deg, #ff6adf, #8d7cff);
-  color: #0b1120;
-  font-weight: 900;
+  border: 1px solid rgba(255, 116, 225, 0.8);
+  background: rgba(255, 116, 225, 0.08);
+  color: #fff5ff;
+  font-size: 0.7rem;
   letter-spacing: 0.08em;
+  padding: 0.9rem 0.75rem;
+  border-radius: 10px;
+  font-weight: 800;
   cursor: pointer;
 }
 
-.product-card button.is-added {
-  background: linear-gradient(90deg, #71dcff, #8ce4bd);
+.product-card > button.is-added {
+  border-color: rgba(113, 220, 255, 0.75);
+  background: rgba(75, 185, 255, 0.12);
+  color: #8be6ff;
 }
 
-.product-card button:disabled {
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(228, 236, 255, 0.55);
+.product-card > button:disabled {
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(236, 241, 255, 0.6);
   cursor: not-allowed;
 }
 
@@ -385,15 +392,15 @@ function toggleCartItem(product) {
   margin-top: 1.5rem;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1080px) {
   .product-grid {
-    grid-template-columns: repeat(2, minmax(200px, 1fr));
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .category-page {
-    padding: 1.25rem 1rem 3rem;
+    padding: 1.5rem 1rem 3rem;
   }
 
   .category-header {
@@ -417,18 +424,16 @@ function toggleCartItem(product) {
 
   .product-figure {
     height: clamp(135px, 42vw, 210px);
+    margin: 0.5rem 0 0.65rem;
   }
 
   .product-card h3 {
-    font-size: 0.9rem;
+    min-height: 0;
+    font-size: 0.86rem;
     line-height: 1.35;
   }
 
-  .price {
-    font-size: 1.15rem;
-  }
-
-  .product-card button {
+  .product-card > button {
     min-height: 42px;
     padding: 0.65rem 0.4rem;
     font-size: 0.58rem;
@@ -440,9 +445,8 @@ function toggleCartItem(product) {
   }
 
   .sizes button {
-    min-width: 25px;
-    height: 27px;
-    font-size: 0.65rem;
+    width: 1.7rem;
+    height: 1.7rem;
   }
 }
 
